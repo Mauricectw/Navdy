@@ -1,0 +1,7 @@
+build/
+Payload/
+*.ipa
+*.xcodeproj/
+.DS_Store
+.build/
+Tools/navdy_pb2.py

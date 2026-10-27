@@ -1,0 +1,1836 @@
+syntax = "proto2";
+// Navdy phone<->HUD protocol, regenerated from Wire classes in navdy-display-Hud-java.
+// Wire framing: Frame{fixed32 size=1} (5 bytes: 0x0D + LE uint32) then NavdyEvent bytes.
+package navdy;
+// ===== com.navdy.service.library.events
+message Capabilities {
+  optional bool compactUi = 1;
+  optional bool placeTypeSearch = 2;
+  optional bool voiceSearch = 3;
+  optional bool localMusicBrowser = 4;
+  optional bool navCoordsLookup = 5;
+  optional bool searchResultList = 6;
+  optional bool musicArtworkCache = 7;
+  optional bool voiceSearchNewIOSPauseBehaviors = 8;
+  optional bool cannedResponseToSms = 9;
+  optional bool customDialLongPress = 10;
+  optional bool supportsPhoneticTts = 11;
+  optional bool supportsPlayAudioRequest = 12;
+}
+message DeviceInfo {
+  enum Platform {
+    Platform_PLATFORM_iOS = 1;
+    Platform_PLATFORM_Android = 2;
+  }
+  required string deviceId = 1;
+  required string clientVersion = 2;
+  required string protocolVersion = 3;
+  required string deviceName = 4;
+  required string systemVersion = 5;
+  required string model = 6;
+  required string deviceUuid = 7;
+  optional int32 systemApiLevel = 8;
+  optional string kernelVersion = 9;
+  optional .navdy.DeviceInfo.Platform platform = 10;
+  optional string buildType = 11;
+  optional string deviceMake = 12;
+  optional bool forceFullUpdate = 13;
+  repeated .navdy.LegacyCapability legacyCapabilities = 14;
+  repeated string musicPlayers_OBSOLETE = 15;
+  optional .navdy.Capabilities capabilities = 16;
+}
+message FavoriteDestinationsRequest {
+  optional int64 serial_number = 1;
+}
+message Frame {
+  required fixed32 size = 1;
+}
+enum LegacyCapability {
+  LegacyCapability_CAPABILITY_VOICE_SEARCH_BETA = 1;
+  LegacyCapability_CAPABILITY_COMPACT_UI = 2;
+  LegacyCapability_CAPABILITY_PLACE_TYPE_SEARCH = 3;
+  LegacyCapability_CAPABILITY_LOCAL_MUSIC_BROWSER = 4;
+  LegacyCapability_CAPABILITY_VOICE_SEARCH = 5;
+}
+message NavdyEvent {
+  enum MessageType {
+    MessageType_Coordinate = 1;
+    MessageType_Notification = 2;
+    MessageType_CallEvent = 3;
+    MessageType_FileListRequest = 4;
+    MessageType_FileListResponse = 5;
+    MessageType_PreviewFileRequest = 6;
+    MessageType_PreviewFileResponse = 7;
+    MessageType_NavigationManeuverEvent = 8;
+    MessageType_NavigationRouteRequest = 9;
+    MessageType_NavigationRouteResponse = 10;
+    MessageType_NavigationSessionRequest = 11;
+    MessageType_NavigationSessionResponse = 12;
+    MessageType_NavigationSessionStatusEvent = 13;
+    MessageType_DismissScreen = 14;
+    MessageType_ShowScreen = 15;
+    MessageType_GestureEvent = 16;
+    MessageType_PlacesSearchRequest = 17;
+    MessageType_PlacesSearchResponse = 18;
+    MessageType_ReadSettingsRequest = 19;
+    MessageType_ReadSettingsResponse = 20;
+    MessageType_UpdateSettings = 21;
+    MessageType_ConnectionStateChange = 22;
+    MessageType_SpeechRequest = 23;
+    MessageType_TelephonyRequest = 24;
+    MessageType_TelephonyResponse = 25;
+    MessageType_NotificationEvent = 26;
+    MessageType_DeviceInfo = 27;
+    MessageType_PhoneEvent = 28;
+    MessageType_VoiceAssistRequest = 29;
+    MessageType_PhotoRequest = 30;
+    MessageType_PhotoResponse = 31;
+    MessageType_NotificationListRequest = 32;
+    MessageType_NotificationListResponse = 33;
+    MessageType_ShowCustomNotification = 34;
+    MessageType_DateTimeConfiguration = 35;
+    MessageType_FileTransferResponse = 36;
+    MessageType_FileTransferRequest = 37;
+    MessageType_FileTransferData = 38;
+    MessageType_FileTransferStatus = 39;
+    MessageType_Ping = 40;
+    MessageType_NotificationsStateChange = 41;
+    MessageType_NotificationsStateRequest = 42;
+    MessageType_MusicTrackInfoRequest = 43;
+    MessageType_MusicTrackInfo = 44;
+    MessageType_MusicEvent = 45;
+    MessageType_DialStatusRequest = 46;
+    MessageType_DialStatusResponse = 47;
+    MessageType_DialBondRequest = 48;
+    MessageType_DialBondResponse = 49;
+    MessageType_DriverProfilePreferencesRequest = 50;
+    MessageType_DriverProfilePreferencesUpdate = 51;
+    MessageType_TransmitLocation = 52;
+    MessageType_DisconnectRequest = 53;
+    MessageType_VoiceAssistResponse = 54;
+    MessageType_GetNavigationSessionState = 55;
+    MessageType_RouteManeuverRequest = 56;
+    MessageType_RouteManeuverResponse = 57;
+    MessageType_NavigationPreferencesRequest = 58;
+    MessageType_NavigationPreferencesUpdate = 59;
+    MessageType_DialSimulationEvent = 60;
+    MessageType_MediaRemoteKeyEvent = 61;
+    MessageType_ContactRequest = 62;
+    MessageType_ContactResponse = 63;
+    MessageType_FavoriteContactsRequest = 64;
+    MessageType_FavoriteContactsResponse = 65;
+    MessageType_FavoriteDestinationsRequest = 66;
+    MessageType_FavoriteDestinationsUpdate = 67;
+    MessageType_RecommendedDestinationsRequest = 68;
+    MessageType_RecommendedDestinationsUpdate = 69;
+    MessageType_ConnectionRequest = 70;
+    MessageType_ConnectionStatus = 71;
+    MessageType_PhoneStatusRequest = 72;
+    MessageType_PhoneStatusResponse = 73;
+    MessageType_LaunchAppEvent = 74;
+    MessageType_InputPreferencesRequest = 75;
+    MessageType_InputPreferencesUpdate = 76;
+    MessageType_PhoneBatteryStatus = 77;
+    MessageType_SmsMessageRequest = 78;
+    MessageType_SmsMessageResponse = 79;
+    MessageType_ObdStatusRequest = 80;
+    MessageType_ObdStatusResponse = 81;
+    MessageType_TripUpdate = 82;
+    MessageType_TripUpdateAck = 83;
+    MessageType_PhotoUpdatesRequest = 84;
+    MessageType_PhotoUpdate = 85;
+    MessageType_DisplaySpeakerPreferencesRequest = 86;
+    MessageType_DisplaySpeakerPreferencesUpdate = 87;
+    MessageType_NavigationRouteStatus = 88;
+    MessageType_NavigationRouteCancelRequest = 89;
+    MessageType_NotificationPreferencesRequest = 90;
+    MessageType_NotificationPreferencesUpdate = 91;
+    MessageType_StartDriveRecordingEvent = 92;
+    MessageType_StopDriveRecordingEvent = 93;
+    MessageType_DriveRecordingsRequest = 94;
+    MessageType_DriveRecordingsResponse = 95;
+    MessageType_StartDrivePlaybackEvent = 96;
+    MessageType_StopDrivePlaybackEvent = 97;
+    MessageType_StartDriveRecordingResponse = 98;
+    MessageType_StartDrivePlaybackResponse = 99;
+    MessageType_NavigationSessionRouteChange = 100;
+    MessageType_StopDriveRecordingResponse = 102;
+    MessageType_AutoCompleteRequest = 105;
+    MessageType_GlanceEvent = 107;
+    MessageType_NowPlayingUpdateRequest = 108;
+    MessageType_CancelSpeechRequest = 109;
+    MessageType_NetworkLinkReady = 110;
+    MessageType_SuggestedDestination = 111;
+    MessageType_CalendarEvent = 112;
+    MessageType_CalendarEventUpdates = 113;
+    MessageType_SpeechRequestStatus = 114;
+    MessageType_AudioStatus = 115;
+    MessageType_LinkPropertiesChanged = 116;
+    MessageType_VoiceSearchRequest = 117;
+    MessageType_VoiceSearchResponse = 118;
+    MessageType_MusicCollectionRequest = 119;
+    MessageType_MusicCapabilitiesRequest = 121;
+    MessageType_MusicCapabilitiesResponse = 122;
+    MessageType_MusicArtworkRequest = 123;
+    MessageType_MusicArtworkResponse = 124;
+    MessageType_DashboardPreferences = 125;
+    MessageType_PlaceTypeSearchResponse = 128;
+    MessageType_DestinationSelectedRequest = 130;
+    MessageType_PhotoUpdateQueryResponse = 133;
+    MessageType_ResumeMusicRequest = 134;
+    MessageType_CannedMessagesRequest = 135;
+    MessageType_CannedMessagesUpdate = 136;
+    MessageType_MusicCollectionSourceUpdate = 137;
+    MessageType_PlayAudioRequest = 138;
+    MessageType_AudioPreferencesRequest = 139;
+    MessageType_AudioPreferencesUpdate = 140;
+  }
+  required .navdy.NavdyEvent.MessageType type = 2;
+  // --- payloads (Ext_NavdyEvent, tag = MessageType + 100) ---
+  optional .navdy.LocationPkg.Coordinate coordinate = 101;
+  optional .navdy.Notification notification = 102;
+  optional .navdy.CallcontrolPkg.CallEvent callEvent = 103;
+  optional .navdy.FilePkg.FileListRequest fileListRequest = 104;
+  optional .navdy.FilePkg.FileListResponse fileListResponse = 105;
+  optional .navdy.FilePkg.PreviewFileRequest previewFileRequest = 106;
+  optional .navdy.FilePkg.PreviewFileResponse previewFileResponse = 107;
+  optional .navdy.NavigationPkg.NavigationManeuverEvent navigationManeuverEvent = 108;
+  optional .navdy.NavigationPkg.NavigationRouteRequest navigationRouteRequest = 109;
+  optional .navdy.NavigationPkg.NavigationRouteResponse navigationRouteResponse = 110;
+  optional .navdy.NavigationPkg.NavigationSessionRequest navigationSessionRequest = 111;
+  optional .navdy.NavigationPkg.NavigationSessionResponse navigationSessionResponse = 112;
+  optional .navdy.NavigationPkg.NavigationSessionStatusEvent navigationSessionStatusEvent = 113;
+  optional .navdy.UiPkg.DismissScreen dismissScreen = 114;
+  optional .navdy.UiPkg.ShowScreen showScreen = 115;
+  optional .navdy.InputPkg.GestureEvent gestureEvent = 116;
+  optional .navdy.PlacesPkg.PlacesSearchRequest placesSearchRequest = 117;
+  optional .navdy.PlacesPkg.PlacesSearchResponse placesSearchResponse = 118;
+  optional .navdy.SettingsPkg.ReadSettingsRequest readSettingsRequest = 119;
+  optional .navdy.SettingsPkg.ReadSettingsResponse readSettingsResponse = 120;
+  optional .navdy.SettingsPkg.UpdateSettings updateSettings = 121;
+  optional .navdy.ConnectionPkg.ConnectionStateChange connectionStateChange = 122;
+  optional .navdy.AudioPkg.SpeechRequest speechRequest = 123;
+  optional .navdy.CallcontrolPkg.TelephonyRequest telephonyRequest = 124;
+  optional .navdy.CallcontrolPkg.TelephonyResponse telephonyResponse = 125;
+  optional .navdy.NotificationPkg.NotificationEvent notificationEvent = 126;
+  optional .navdy.DeviceInfo deviceInfo = 127;
+  optional .navdy.CallcontrolPkg.PhoneEvent phoneEvent = 128;
+  optional .navdy.AudioPkg.VoiceAssistRequest voiceAssistRequest = 129;
+  optional .navdy.PhotoPkg.PhotoRequest photoRequest = 130;
+  optional .navdy.PhotoPkg.PhotoResponse photoResponse = 131;
+  optional .navdy.NotificationPkg.NotificationListRequest notificationListRequest = 132;
+  optional .navdy.NotificationPkg.NotificationListResponse notificationListResponse = 133;
+  optional .navdy.NotificationPkg.ShowCustomNotification showCustomNotification = 134;
+  optional .navdy.SettingsPkg.DateTimeConfiguration dateTimeConfiguration = 135;
+  optional .navdy.FilePkg.FileTransferResponse fileTransferResponse = 136;
+  optional .navdy.FilePkg.FileTransferRequest fileTransferRequest = 137;
+  optional .navdy.FilePkg.FileTransferData fileTransferData = 138;
+  optional .navdy.FilePkg.FileTransferStatus fileTransferStatus = 139;
+  optional .navdy.Ping ping = 140;
+  optional .navdy.NotificationPkg.NotificationsStatusUpdate notificationsStatusUpdate = 141;
+  optional .navdy.NotificationPkg.NotificationsStatusRequest notificationsStatusRequest = 142;
+  optional .navdy.AudioPkg.MusicTrackInfoRequest musicTrackInfoRequest = 143;
+  optional .navdy.AudioPkg.MusicTrackInfo musicTrackInfo = 144;
+  optional .navdy.AudioPkg.MusicEvent musicEvent = 145;
+  optional .navdy.DialPkg.DialStatusRequest dialStatusRequest = 146;
+  optional .navdy.DialPkg.DialStatusResponse dialStatusResponse = 147;
+  optional .navdy.DialPkg.DialBondRequest dialBondRequest = 148;
+  optional .navdy.DialPkg.DialBondResponse dialBondResponse = 149;
+  optional .navdy.PreferencesPkg.DriverProfilePreferencesRequest driverProfilePreferencesRequest = 150;
+  optional .navdy.PreferencesPkg.DriverProfilePreferencesUpdate driverPreferencesUpdate = 151;
+  optional .navdy.LocationPkg.TransmitLocation transmitLocation = 152;
+  optional .navdy.ConnectionPkg.DisconnectRequest disconnectRequest = 153;
+  optional .navdy.AudioPkg.VoiceAssistResponse voiceAssistResponse = 154;
+  optional .navdy.NavigationPkg.GetNavigationSessionState getNavigationSessionState = 155;
+  optional .navdy.NavigationPkg.RouteManeuverRequest routeManeuverRequest = 156;
+  optional .navdy.NavigationPkg.RouteManeuverResponse routeManeuverResponse = 157;
+  optional .navdy.PreferencesPkg.NavigationPreferencesRequest navigationPreferencesRequest = 158;
+  optional .navdy.PreferencesPkg.NavigationPreferencesUpdate navigationPreferencesUpdate = 159;
+  optional .navdy.InputPkg.DialSimulationEvent dialSimulationEvent = 160;
+  optional .navdy.InputPkg.MediaRemoteKeyEvent mediaRemoteKeyEvent = 161;
+  optional .navdy.ContactsPkg.ContactRequest contactRequest = 162;
+  optional .navdy.ContactsPkg.ContactResponse contactResponse = 163;
+  optional .navdy.ContactsPkg.FavoriteContactsRequest favoriteContactsRequest = 164;
+  optional .navdy.ContactsPkg.FavoriteContactsResponse favoriteContactsResponse = 165;
+  optional .navdy.FavoriteDestinationsRequest favoriteDestinationsRequest = 166;
+  optional .navdy.PlacesPkg.FavoriteDestinationsUpdate favoriteDestinationUpdate = 167;
+  optional .navdy.DestinationPkg.RecommendedDestinationsRequest recommendedDestinationsRequest = 168;
+  optional .navdy.DestinationPkg.RecommendedDestinationsUpdate recommendedDestinationsUpdate = 169;
+  optional .navdy.ConnectionPkg.ConnectionRequest connectionRequest = 170;
+  optional .navdy.ConnectionPkg.ConnectionStatus connectionStatus = 171;
+  optional .navdy.CallcontrolPkg.PhoneStatusRequest phoneStatusRequest = 172;
+  optional .navdy.CallcontrolPkg.PhoneStatusResponse phoneStatusResponse = 173;
+  optional .navdy.InputPkg.LaunchAppEvent launchAppEvent = 174;
+  optional .navdy.PreferencesPkg.InputPreferencesRequest inputPreferencesRequest = 175;
+  optional .navdy.PreferencesPkg.InputPreferencesUpdate inputPreferencesUpdate = 176;
+  optional .navdy.CallcontrolPkg.PhoneBatteryStatus phoneBatteryStatus = 177;
+  optional .navdy.MessagingPkg.SmsMessageRequest smsMessageRequest = 178;
+  optional .navdy.MessagingPkg.SmsMessageResponse smsMessageResponse = 179;
+  optional .navdy.ObdPkg.ObdStatusRequest obdStatusRequest = 180;
+  optional .navdy.ObdPkg.ObdStatusResponse obdStatusResponse = 181;
+  optional .navdy.TripUpdate tripUpdate = 182;
+  optional .navdy.LocationPkg.TripUpdateAck tripUpdateAck = 183;
+  optional .navdy.PhotoPkg.PhotoUpdatesRequest photoUpdateRequest = 184;
+  optional .navdy.PhotoPkg.PhotoUpdate photoUpdate = 185;
+  optional .navdy.PreferencesPkg.DisplaySpeakerPreferencesRequest displaySpeakerPreferencesRequest = 186;
+  optional .navdy.PreferencesPkg.DisplaySpeakerPreferencesUpdate displaySpeakerPreferencesUpdate = 187;
+  optional .navdy.NavigationPkg.NavigationRouteStatus navigationRouteStatus = 188;
+  optional .navdy.NavigationPkg.NavigationRouteCancelRequest navigationRouteCancelRequest = 189;
+  optional .navdy.PreferencesPkg.NotificationPreferencesRequest notificationsPreferencesRequest = 190;
+  optional .navdy.PreferencesPkg.NotificationPreferencesUpdate notificationPreferencesUpdate = 191;
+  optional .navdy.DebugPkg.StartDriveRecordingEvent startDriveRecordingEvent = 192;
+  optional .navdy.DebugPkg.StopDriveRecordingEvent stopDriveRecordingEvent = 193;
+  optional .navdy.DebugPkg.DriveRecordingsRequest driveRecordingsRequest = 194;
+  optional .navdy.DebugPkg.DriveRecordingsResponse driveRecordingsResponse = 195;
+  optional .navdy.DebugPkg.StartDrivePlaybackEvent startDrivePlaybackEvent = 196;
+  optional .navdy.DebugPkg.StopDrivePlaybackEvent stopDrivePlaybackEvent = 197;
+  optional .navdy.DebugPkg.StartDriveRecordingResponse startDriveRecordingResponse = 198;
+  optional .navdy.DebugPkg.StartDrivePlaybackResponse startDrivePlaybackResponse = 199;
+  optional .navdy.NavigationPkg.NavigationSessionRouteChange navigationSessionRouteChange = 200;
+  optional .navdy.SettingsPkg.NetworkStateChange networkStateChange = 201;
+  optional .navdy.DebugPkg.StopDriveRecordingResponse stopDriveRecordingResponse = 202;
+  optional .navdy.NavigationPkg.NavigationSessionDeferRequest navigationSessionDeferRequest = 203;
+  optional .navdy.CallcontrolPkg.CallStateUpdateRequest callStateUpdateRequest = 204;
+  optional .navdy.PlacesPkg.AutoCompleteRequest autoCompleteRequest = 205;
+  optional .navdy.PlacesPkg.AutoCompleteResponse autoCompleteResponse = 206;
+  optional .navdy.GlancesPkg.GlanceEvent glanceEvent = 207;
+  optional .navdy.AudioPkg.NowPlayingUpdateRequest nowPlayingUpdateRequest = 208;
+  optional .navdy.AudioPkg.CancelSpeechRequest cancelSpeechRequest = 209;
+  optional .navdy.ConnectionPkg.NetworkLinkReady networkLinkReady = 210;
+  optional .navdy.PlacesPkg.SuggestedDestination suggestedDestination = 211;
+  optional .navdy.CalendarsPkg.CalendarEvent calendarEvent = 212;
+  optional .navdy.CalendarsPkg.CalendarEventUpdates calendarEventUpdates = 213;
+  optional .navdy.AudioPkg.SpeechRequestStatus speechRequestStatus = 214;
+  optional .navdy.AudioPkg.AudioStatus audioStatus = 215;
+  optional .navdy.ConnectionPkg.LinkPropertiesChanged linkPropertiesChanged = 216;
+  optional .navdy.AudioPkg.VoiceSearchRequest voiceSearchRequest = 217;
+  optional .navdy.AudioPkg.VoiceSearchResponse voiceSearchResponse = 218;
+  optional .navdy.AudioPkg.MusicCollectionRequest musicCollectionRequest = 219;
+  optional .navdy.AudioPkg.MusicCollectionResponse musicCollectionResponse = 220;
+  optional .navdy.AudioPkg.MusicCapabilitiesRequest musicCapabilitiesRequest = 221;
+  optional .navdy.AudioPkg.MusicCapabilitiesResponse musicCapabilitiesResponse = 222;
+  optional .navdy.AudioPkg.MusicArtworkRequest musicArtworkRequest = 223;
+  optional .navdy.AudioPkg.MusicArtworkResponse musicArtworkResponse = 224;
+  optional .navdy.PreferencesPkg.DashboardPreferences dashboardPreferences = 225;
+  optional .navdy.GlancesPkg.ClearGlances clearGlances = 226;
+  optional .navdy.PlacesPkg.PlaceTypeSearchRequest placeTypeSearchRequest = 227;
+  optional .navdy.PlacesPkg.PlaceTypeSearchResponse placeTypeSearchResponse = 228;
+  optional .navdy.HudcontrolPkg.AccelerateShutdown accelerateShutdown = 229;
+  optional .navdy.PlacesPkg.DestinationSelectedRequest destinationSelectedRequest = 230;
+  optional .navdy.PlacesPkg.DestinationSelectedResponse destinationSelectedResponse = 231;
+  optional .navdy.PhotoPkg.PhotoUpdateQuery photoUpdateQuery = 232;
+  optional .navdy.PhotoPkg.PhotoUpdateQueryResponse photoUpdateQueryResponse = 233;
+  optional .navdy.AudioPkg.ResumeMusicRequest resumeMusicRequest = 234;
+  optional .navdy.GlancesPkg.CannedMessagesRequest cannedMessagesRequest = 235;
+  optional .navdy.GlancesPkg.CannedMessagesUpdate cannedMessagesUpdate = 236;
+  optional .navdy.AudioPkg.MusicCollectionSourceUpdate musicCollectionSourceUpdate = 237;
+  optional .navdy.AudioPkg.PlayAudioRequest playAudioRequest = 238;
+  optional .navdy.PreferencesPkg.AudioPreferencesRequest audioPreferencesRequest = 239;
+  optional .navdy.PreferencesPkg.AudioPreferencesUpdate audioPreferencesUpdate = 240;
+}
+message Notification {
+  required int32 sms_class = 1;
+  optional string origin = 2;
+  optional string sender = 3;
+  optional string target = 4;
+  optional string message_data = 5;
+  optional string type = 6;
+}
+message Ping {
+}
+enum RequestStatus {
+  RequestStatus_REQUEST_SUCCESS = 1;
+  RequestStatus_REQUEST_NOT_READY = 2;
+  RequestStatus_REQUEST_NO_LOCATION_SERVICE = 3;
+  RequestStatus_REQUEST_SERVICE_ERROR = 4;
+  RequestStatus_REQUEST_INVALID_REQUEST = 5;
+  RequestStatus_REQUEST_INVALID_STATE = 6;
+  RequestStatus_REQUEST_UNKNOWN_ERROR = 7;
+  RequestStatus_REQUEST_VERSION_IS_CURRENT = 8;
+  RequestStatus_REQUEST_NOT_AVAILABLE = 9;
+  RequestStatus_REQUEST_ALREADY_IN_PROGRESS = 10;
+  RequestStatus_REQUEST_CANCELLED = 11;
+}
+message TripUpdate {
+  required int64 trip_number = 1;
+  required int32 sequence_number = 2;
+  required int64 timestamp = 3;
+  required int32 distance_traveled = 4;
+  required .navdy.LocationPkg.LatLong current_position = 5;
+  optional double elevation = 6;
+  optional float bearing = 7;
+  optional float gps_speed = 8;
+  optional int32 obd_speed = 9;
+  optional string road_element = 10;
+  optional string chosen_destination_id = 11;
+  optional string arrived_at_destination_id = 12;
+  optional int32 estimated_time_remaining = 13;
+  optional int32 distance_to_destination = 14;
+  optional int32 high_g_count = 15;
+  optional int32 hard_breaking_count = 16;
+  optional int32 hard_acceleration_count = 17;
+  optional double speeding_ratio = 18;
+  optional double excessive_speeding_ratio = 19;
+  optional int32 meters_traveled_since_boot = 20;
+  optional float horizontal_accuracy = 21;
+  optional float elevation_accuracy = 22;
+  optional .navdy.LocationPkg.Coordinate last_raw_coordinate = 23;
+}
+// ===== com.navdy.service.library.events.audio
+message AudioPkg {
+  enum Audio {
+    Audio_DRIVE_BEHAVIOR_SPEEDING = 1;
+    Audio_DRIVE_BEHAVIOR_EXCESSIVE_SPEEDING = 2;
+    Audio_DRIVE_BEHAVIOR_HARD_ACCELERATION = 3;
+    Audio_DRIVE_BEHAVIOR_HARD_BRAKING = 4;
+    Audio_DRIVE_BEHAVIOR_HIGH_G = 5;
+  }
+  message AudioStatus {
+    enum ConnectionType {
+      ConnectionType_AUDIO_CONNECTION_NONE = 1;
+      ConnectionType_AUDIO_CONNECTION_BLUETOOTH = 2;
+      ConnectionType_AUDIO_CONNECTION_SPEAKER = 3;
+      ConnectionType_AUDIO_CONNECTION_AUX = 4;
+    }
+    enum ProfileType {
+      ProfileType_AUDIO_PROFILE_NONE = 1;
+      ProfileType_AUDIO_PROFILE_A2DP = 2;
+      ProfileType_AUDIO_PROFILE_HFP = 3;
+    }
+    optional bool isConnected = 1;
+    optional .navdy.AudioPkg.AudioStatus.ConnectionType connectionType = 2;
+    optional .navdy.AudioPkg.AudioStatus.ProfileType profileType = 3;
+    optional bool isPlaying = 4;
+    optional bool hasSCOConnection = 5;
+  }
+  message CancelSpeechRequest {
+    optional string id = 1;
+  }
+  enum Category {
+    Category_SPEECH_TURN_BY_TURN = 1;
+    Category_SPEECH_REROUTE = 2;
+    Category_SPEECH_SPEED_WARNING = 3;
+    Category_SPEECH_GPS_CONNECTIVITY = 4;
+    Category_SPEECH_MESSAGE_READ_OUT = 5;
+    Category_SPEECH_WELCOME_MESSAGE = 6;
+    Category_SPEECH_NOTIFICATION = 7;
+    Category_SPEECH_CAMERA_WARNING = 8;
+    Category_AUDIO_DRIVE_BEHAVIOR = 9;
+  }
+  message MusicArtworkRequest {
+    optional .navdy.AudioPkg.MusicCollectionSource collectionSource = 1;
+    optional string name = 2;
+    optional string album = 3;
+    optional string author = 4;
+    optional uint32 size = 5;
+    optional .navdy.AudioPkg.MusicCollectionType collectionType = 6;
+    optional string collectionId = 7;
+  }
+  message MusicArtworkResponse {
+    optional .navdy.AudioPkg.MusicCollectionSource collectionSource = 1;
+    optional string name = 2;
+    optional string album = 3;
+    optional string author = 4;
+    optional bytes photo = 5;
+    optional .navdy.AudioPkg.MusicCollectionType collectionType = 6;
+    optional string collectionId = 7;
+  }
+  message MusicCapabilitiesRequest {
+  }
+  message MusicCapabilitiesResponse {
+    repeated .navdy.AudioPkg.MusicCapability capabilities = 1;
+  }
+  message MusicCapability {
+    enum MusicAuthorizationStatus {
+      MusicAuthorizationStatus_MUSIC_AUTHORIZATION_NOT_DETERMINED = 1;
+      MusicAuthorizationStatus_MUSIC_AUTHORIZATION_AUTHORIZED = 2;
+      MusicAuthorizationStatus_MUSIC_AUTHORIZATION_DENIED = 3;
+    }
+    optional .navdy.AudioPkg.MusicCollectionSource collectionSource = 1;
+    repeated .navdy.AudioPkg.MusicCollectionType collectionTypes = 2;
+    optional .navdy.AudioPkg.MusicCapability.MusicAuthorizationStatus authorizationStatus = 3;
+    repeated .navdy.AudioPkg.MusicShuffleMode supportedShuffleModes = 4;
+    repeated .navdy.AudioPkg.MusicRepeatMode supportedRepeatModes = 5;
+    optional int64 serial_number = 6;
+  }
+  message MusicCharacterMap {
+    optional string character = 1;
+    optional uint32 offset = 2;
+  }
+  message MusicCollectionFilter {
+    optional string field = 1;
+    optional string value = 2;
+  }
+  message MusicCollectionInfo {
+    optional .navdy.AudioPkg.MusicCollectionSource collectionSource = 1;
+    optional .navdy.AudioPkg.MusicCollectionType collectionType = 2;
+    optional string collectionId = 3;
+    optional string name = 4;
+    optional int32 size = 5;
+    optional int32 index = 6;
+    optional string subtitle = 7;
+    optional bool canShuffle = 8;
+  }
+  message MusicCollectionRequest {
+    optional .navdy.AudioPkg.MusicCollectionSource collectionSource = 1;
+    optional .navdy.AudioPkg.MusicCollectionType collectionType = 2;
+    repeated .navdy.AudioPkg.MusicCollectionFilter filters = 3;
+    optional string collectionId = 4;
+    optional int32 limit = 5;
+    optional int32 offset = 6;
+    optional bool includeCharacterMap = 7;
+    optional .navdy.AudioPkg.MusicCollectionType groupBy = 8;
+  }
+  message MusicCollectionResponse {
+    optional .navdy.AudioPkg.MusicCollectionInfo collectionInfo = 1;
+    repeated .navdy.AudioPkg.MusicCollectionInfo musicCollections = 2;
+    repeated .navdy.AudioPkg.MusicTrackInfo musicTracks = 3;
+    repeated .navdy.AudioPkg.MusicCharacterMap characterMap = 4;
+  }
+  enum MusicCollectionSource {
+    MusicCollectionSource_COLLECTION_SOURCE_UNKNOWN = 0;
+    MusicCollectionSource_COLLECTION_SOURCE_ANDROID_LOCAL = 1;
+    MusicCollectionSource_COLLECTION_SOURCE_IOS_MEDIA_PLAYER = 2;
+    MusicCollectionSource_COLLECTION_SOURCE_ANDROID_GOOGLE_PLAY_MUSIC = 3;
+    MusicCollectionSource_COLLECTION_SOURCE_ANDROID_SPOTIFY = 4;
+  }
+  message MusicCollectionSourceUpdate {
+    optional .navdy.AudioPkg.MusicCollectionSource collectionSource = 1;
+    optional int64 serial_number = 2;
+  }
+  enum MusicCollectionType {
+    MusicCollectionType_COLLECTION_TYPE_UNKNOWN = 0;
+    MusicCollectionType_COLLECTION_TYPE_PLAYLISTS = 1;
+    MusicCollectionType_COLLECTION_TYPE_ARTISTS = 2;
+    MusicCollectionType_COLLECTION_TYPE_ALBUMS = 3;
+    MusicCollectionType_COLLECTION_TYPE_PODCASTS = 4;
+    MusicCollectionType_COLLECTION_TYPE_AUDIOBOOKS = 5;
+  }
+  enum MusicDataSource {
+    MusicDataSource_MUSIC_SOURCE_NONE = 1;
+    MusicDataSource_MUSIC_SOURCE_ANDROID_INTENT = 2;
+    MusicDataSource_MUSIC_SOURCE_MEDIA_CONTROLLER = 3;
+    MusicDataSource_MUSIC_SOURCE_OS_NOTIFICATION = 4;
+    MusicDataSource_MUSIC_SOURCE_SPOTIFY_INTENT = 5;
+    MusicDataSource_MUSIC_SOURCE_PANDORA_API = 6;
+  }
+  message MusicEvent {
+    enum Action {
+      Action_MUSIC_ACTION_PLAY = 1;
+      Action_MUSIC_ACTION_PAUSE = 2;
+      Action_MUSIC_ACTION_NEXT = 3;
+      Action_MUSIC_ACTION_PREVIOUS = 4;
+      Action_MUSIC_ACTION_REWIND_START = 5;
+      Action_MUSIC_ACTION_FAST_FORWARD_START = 6;
+      Action_MUSIC_ACTION_REWIND_STOP = 7;
+      Action_MUSIC_ACTION_FAST_FORWARD_STOP = 8;
+      Action_MUSIC_ACTION_MODE_CHANGE = 9;
+    }
+    required .navdy.AudioPkg.MusicEvent.Action action = 1;
+    optional .navdy.AudioPkg.MusicDataSource dataSource = 2;
+    optional string collectionId = 13;
+    optional .navdy.AudioPkg.MusicCollectionSource collectionSource = 14;
+    optional .navdy.AudioPkg.MusicCollectionType collectionType = 15;
+    optional int32 index = 16;
+    optional .navdy.AudioPkg.MusicShuffleMode shuffleMode = 17;
+    optional .navdy.AudioPkg.MusicRepeatMode repeatMode = 18;
+  }
+  enum MusicPlaybackState {
+    MusicPlaybackState_PLAYBACK_NONE = 1;
+    MusicPlaybackState_PLAYBACK_BUFFERING = 2;
+    MusicPlaybackState_PLAYBACK_CONNECTING = 3;
+    MusicPlaybackState_PLAYBACK_ERROR = 4;
+    MusicPlaybackState_PLAYBACK_PLAYING = 5;
+    MusicPlaybackState_PLAYBACK_PAUSED = 6;
+    MusicPlaybackState_PLAYBACK_STOPPED = 7;
+    MusicPlaybackState_PLAYBACK_FAST_FORWARDING = 8;
+    MusicPlaybackState_PLAYBACK_REWINDING = 9;
+    MusicPlaybackState_PLAYBACK_SKIPPING_TO_NEXT = 10;
+    MusicPlaybackState_PLAYBACK_SKIPPING_TO_PREVIOUS = 11;
+  }
+  enum MusicRepeatMode {
+    MusicRepeatMode_MUSIC_REPEAT_MODE_UNKNOWN = 1;
+    MusicRepeatMode_MUSIC_REPEAT_MODE_OFF = 2;
+    MusicRepeatMode_MUSIC_REPEAT_MODE_ONE = 3;
+    MusicRepeatMode_MUSIC_REPEAT_MODE_ALL = 4;
+  }
+  enum MusicShuffleMode {
+    MusicShuffleMode_MUSIC_SHUFFLE_MODE_UNKNOWN = 1;
+    MusicShuffleMode_MUSIC_SHUFFLE_MODE_OFF = 2;
+    MusicShuffleMode_MUSIC_SHUFFLE_MODE_SONGS = 3;
+    MusicShuffleMode_MUSIC_SHUFFLE_MODE_ALBUMS = 4;
+  }
+  message MusicTrackInfo {
+    required .navdy.AudioPkg.MusicPlaybackState playbackState = 1;
+    optional int64 index = 2;
+    optional string name = 3;
+    optional string author = 4;
+    optional string album = 5;
+    optional int32 duration = 6;
+    optional int32 currentPosition = 7;
+    optional bool isPreviousAllowed = 8;
+    optional bool isNextAllowed = 9;
+    optional .navdy.AudioPkg.MusicDataSource dataSource = 10;
+    optional bool isOnlineStream = 11;
+    optional .navdy.AudioPkg.MusicCollectionSource collectionSource = 12;
+    optional .navdy.AudioPkg.MusicCollectionType collectionType = 13;
+    optional string collectionId = 14;
+    optional string trackId = 15;
+    optional int32 playCount = 16;
+    optional .navdy.AudioPkg.MusicShuffleMode shuffleMode = 17;
+    optional .navdy.AudioPkg.MusicRepeatMode repeatMode = 18;
+  }
+  message MusicTrackInfoRequest {
+  }
+  message NowPlayingUpdateRequest {
+    required bool start = 1;
+  }
+  message PlayAudioRequest {
+    optional int64 id = 1;
+    optional .navdy.AudioPkg.Category category = 2;
+    optional .navdy.AudioPkg.Audio audio = 3;
+    optional string language = 4;
+    optional int64 timeStamp = 5;
+  }
+  message ResumeMusicRequest {
+  }
+  message SpeechRequest {
+    required string words = 1;
+    optional .navdy.AudioPkg.Category category = 2;
+    optional string id = 3;
+    optional bool sendStatus = 4;
+    optional string language = 5;
+  }
+  message SpeechRequestStatus {
+    enum SpeechRequestStatusType {
+      SpeechRequestStatusType_SPEECH_REQUEST_STARTING = 1;
+      SpeechRequestStatusType_SPEECH_REQUEST_STOPPED = 2;
+    }
+    optional string id = 1;
+    optional .navdy.AudioPkg.SpeechRequestStatus.SpeechRequestStatusType status = 2;
+  }
+  message VoiceAssistRequest {
+    optional bool end = 1;
+  }
+  message VoiceAssistResponse {
+    enum VoiceAssistState {
+      VoiceAssistState_VOICE_ASSIST_AVAILABLE = 0;
+      VoiceAssistState_VOICE_ASSIST_NOT_AVAILABLE = 1;
+      VoiceAssistState_VOICE_ASSIST_LISTENING = 2;
+      VoiceAssistState_VOICE_ASSIST_STOPPED = 3;
+    }
+    required .navdy.AudioPkg.VoiceAssistResponse.VoiceAssistState state = 1;
+  }
+  message VoiceSearchRequest {
+    optional bool end = 1;
+  }
+  message VoiceSearchResponse {
+    enum VoiceSearchError {
+      VoiceSearchError_NOT_AVAILABLE = 0;
+      VoiceSearchError_NEED_PERMISSION = 1;
+      VoiceSearchError_OFFLINE = 2;
+      VoiceSearchError_FAILED_TO_START = 3;
+      VoiceSearchError_NO_WORDS_RECOGNIZED = 4;
+      VoiceSearchError_NO_RESULTS_FOUND = 5;
+      VoiceSearchError_AMBIENT_NOISE = 6;
+      VoiceSearchError_VOICE_SEARCH_ERROR_CARPLAY_BLACKLIST = 7;
+    }
+    enum VoiceSearchState {
+      VoiceSearchState_VOICE_SEARCH_ERROR = 0;
+      VoiceSearchState_VOICE_SEARCH_STARTING = 1;
+      VoiceSearchState_VOICE_SEARCH_LISTENING = 2;
+      VoiceSearchState_VOICE_SEARCH_SEARCHING = 3;
+      VoiceSearchState_VOICE_SEARCH_SUCCESS = 4;
+    }
+    required .navdy.AudioPkg.VoiceSearchResponse.VoiceSearchState state = 1;
+    optional string recognizedWords = 2;
+    optional int32 volumeLevel = 3;
+    optional bool listeningOverBluetooth = 4;
+    optional .navdy.AudioPkg.VoiceSearchResponse.VoiceSearchError error = 5;
+    optional int32 confidenceLevel = 6;
+    repeated .navdy.DestinationPkg.Destination results = 7;
+    optional string prefix = 8;
+    optional string locale = 9;
+  }
+}
+// ===== com.navdy.service.library.events.calendars
+message CalendarsPkg {
+  message CalendarEvent {
+    optional string display_name = 1;
+    optional int64 start_time = 2;
+    optional int64 end_time = 3;
+    optional bool all_day = 4;
+    optional fixed32 color = 5;
+    optional string location = 6;
+    optional string calendar_name = 7;
+    optional .navdy.DestinationPkg.Destination destination = 8;
+  }
+  message CalendarEventUpdates {
+    repeated .navdy.CalendarsPkg.CalendarEvent calendar_events = 1;
+  }
+}
+// ===== com.navdy.service.library.events.callcontrol
+message CallcontrolPkg {
+  enum CallAction {
+    CallAction_CALL_ACCEPT = 1;
+    CallAction_CALL_END = 2;
+    CallAction_CALL_DIAL = 3;
+    CallAction_CALL_MUTE = 4;
+    CallAction_CALL_UNMUTE = 5;
+    CallAction_CALL_REJECT = 6;
+  }
+  message CallEvent {
+    required bool incoming = 1;
+    required bool answered = 2;
+    required string number = 3;
+    optional string contact_name = 4;
+    required int64 start_time = 5;
+    required int64 duration = 6;
+  }
+  message CallStateUpdateRequest {
+    required bool start = 1;
+  }
+  message PhoneBatteryStatus {
+    enum BatteryStatus {
+      BatteryStatus_BATTERY_OK = 1;
+      BatteryStatus_BATTERY_LOW = 2;
+      BatteryStatus_BATTERY_EXTREMELY_LOW = 3;
+    }
+    required .navdy.CallcontrolPkg.PhoneBatteryStatus.BatteryStatus status = 1;
+    optional int32 level = 2;
+    optional bool charging = 3;
+  }
+  message PhoneEvent {
+    required .navdy.CallcontrolPkg.PhoneStatus status = 1;
+    optional string number = 2;
+    optional string contact_name = 3;
+    optional string label = 4;
+    optional string callUUID = 5;
+  }
+  enum PhoneStatus {
+    PhoneStatus_PHONE_IDLE = 1;
+    PhoneStatus_PHONE_RINGING = 2;
+    PhoneStatus_PHONE_OFFHOOK = 3;
+    PhoneStatus_PHONE_DIALING = 4;
+    PhoneStatus_PHONE_HELD = 5;
+    PhoneStatus_PHONE_CONNECTING = 6;
+    PhoneStatus_PHONE_DISCONNECTING = 7;
+  }
+  message PhoneStatusRequest {
+  }
+  message PhoneStatusResponse {
+    required .navdy.RequestStatus status = 1;
+    optional .navdy.CallcontrolPkg.PhoneEvent callStatus = 2;
+  }
+  message TelephonyRequest {
+    required .navdy.CallcontrolPkg.CallAction action = 1;
+    optional string number = 2;
+    optional string callUUID = 3;
+  }
+  message TelephonyResponse {
+    required .navdy.CallcontrolPkg.CallAction action = 1;
+    required .navdy.RequestStatus status = 2;
+    optional string statusDetail = 3;
+  }
+}
+// ===== com.navdy.service.library.events.connection
+message ConnectionPkg {
+  message ConnectionRequest {
+    enum Action {
+      Action_CONNECTION_START_SEARCH = 1;
+      Action_CONNECTION_STOP_SEARCH = 2;
+      Action_CONNECTION_SELECT = 3;
+    }
+    required .navdy.ConnectionPkg.ConnectionRequest.Action action = 1;
+    optional string remoteDeviceId = 2;
+  }
+  message ConnectionStateChange {
+    enum ConnectionState {
+      ConnectionState_CONNECTION_CONNECTED = 1;
+      ConnectionState_CONNECTION_DISCONNECTED = 2;
+      ConnectionState_CONNECTION_LINK_ESTABLISHED = 3;
+      ConnectionState_CONNECTION_LINK_LOST = 4;
+      ConnectionState_CONNECTION_VERIFIED = 5;
+    }
+    required string remoteDeviceId = 1;
+    required .navdy.ConnectionPkg.ConnectionStateChange.ConnectionState state = 2;
+  }
+  message ConnectionStatus {
+    enum Status {
+      Status_CONNECTION_PAIRING = 1;
+      Status_CONNECTION_SEARCH_STARTED = 2;
+      Status_CONNECTION_SEARCH_FINISHED = 3;
+      Status_CONNECTION_FOUND = 4;
+      Status_CONNECTION_LOST = 5;
+      Status_CONNECTION_PAIRED_DEVICES_CHANGED = 6;
+    }
+    required .navdy.ConnectionPkg.ConnectionStatus.Status status = 1;
+    optional string remoteDeviceId = 2;
+  }
+  message DisconnectRequest {
+    optional bool forget = 1;
+  }
+  message LinkPropertiesChanged {
+    optional int32 bandwidthLevel = 1;
+  }
+  message NetworkLinkReady {
+  }
+}
+// ===== com.navdy.service.library.events.contacts
+message ContactsPkg {
+  message Contact {
+    optional string name = 1;
+    optional string number = 2;
+    optional .navdy.ContactsPkg.PhoneNumberType numberType = 3;
+    optional string label = 4;
+  }
+  message ContactRequest {
+    optional string identifier = 1;
+  }
+  message ContactResponse {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    optional string identifier = 3;
+    repeated .navdy.ContactsPkg.Contact contacts = 5;
+  }
+  message FavoriteContactsRequest {
+    optional int32 maxContacts = 1;
+  }
+  message FavoriteContactsResponse {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    repeated .navdy.ContactsPkg.Contact contacts = 3;
+  }
+  message PhoneNumber {
+    optional string number = 1;
+    optional .navdy.ContactsPkg.PhoneNumberType numberType = 2;
+    optional string customType = 3;
+  }
+  enum PhoneNumberType {
+    PhoneNumberType_PHONE_NUMBER_HOME = 1;
+    PhoneNumberType_PHONE_NUMBER_WORK = 2;
+    PhoneNumberType_PHONE_NUMBER_MOBILE = 3;
+    PhoneNumberType_PHONE_NUMBER_OTHER = 4;
+  }
+}
+// ===== com.navdy.service.library.events.debug
+message DebugPkg {
+  message DriveRecordingsRequest {
+  }
+  message DriveRecordingsResponse {
+    repeated string recordings = 1;
+  }
+  message StartDrivePlaybackEvent {
+    required string label = 1;
+    optional bool playSecondaryLocation = 2;
+  }
+  message StartDrivePlaybackResponse {
+    required .navdy.RequestStatus status = 1;
+  }
+  message StartDriveRecordingEvent {
+    required string label = 1;
+  }
+  message StartDriveRecordingResponse {
+    required .navdy.RequestStatus status = 1;
+  }
+  message StopDrivePlaybackEvent {
+  }
+  message StopDriveRecordingEvent {
+  }
+  message StopDriveRecordingResponse {
+    required .navdy.RequestStatus status = 1;
+  }
+}
+// ===== com.navdy.service.library.events.destination
+message DestinationPkg {
+  message Destination {
+    enum FavoriteType {
+      FavoriteType_FAVORITE_NONE = 0;
+      FavoriteType_FAVORITE_HOME = 1;
+      FavoriteType_FAVORITE_WORK = 2;
+      FavoriteType_FAVORITE_CONTACT = 3;
+      FavoriteType_FAVORITE_CUSTOM = 10;
+    }
+    enum SuggestionType {
+      SuggestionType_SUGGESTION_NONE = 0;
+      SuggestionType_SUGGESTION_CALENDAR = 1;
+      SuggestionType_SUGGESTION_RECENT = 2;
+    }
+    required .navdy.LocationPkg.LatLong navigation_position = 1;
+    optional .navdy.LocationPkg.LatLong display_position = 2;
+    required string full_address = 3;
+    required string destination_title = 4;
+    required string destination_subtitle = 5;
+    required .navdy.DestinationPkg.Destination.FavoriteType favorite_type = 7;
+    required string identifier = 8;
+    optional .navdy.DestinationPkg.Destination.SuggestionType suggestion_type = 9;
+    optional bool is_recommendation = 10;
+    optional int64 last_navigated_to = 11;
+    optional .navdy.PlacesPkg.PlaceType place_type = 12;
+    optional int32 destinationIcon = 13;
+    optional int32 destinationIconBkColor = 14;
+    optional string place_id = 15;
+    optional string destinationDistance = 16;
+    repeated .navdy.ContactsPkg.PhoneNumber phoneNumbers = 17;
+    repeated .navdy.ContactsPkg.Contact contacts = 18;
+  }
+  message RecommendedDestinationsRequest {
+    optional int64 serial_number = 1;
+  }
+  message RecommendedDestinationsUpdate {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    required int64 serial_number = 3;
+    repeated .navdy.DestinationPkg.Destination destinations = 4;
+  }
+}
+// ===== com.navdy.service.library.events.dial
+message DialPkg {
+  message DialBondRequest {
+    enum DialAction {
+      DialAction_DIAL_BOND = 1;
+      DialAction_DIAL_CLEAR_BOND = 2;
+      DialAction_DIAL_REBOND = 3;
+    }
+    optional .navdy.DialPkg.DialBondRequest.DialAction action = 1;
+  }
+  message DialBondResponse {
+    optional .navdy.DialPkg.DialError status = 1;
+    optional string name = 2;
+    optional string macAddress = 3;
+  }
+  enum DialError {
+    DialError_DIAL_ERROR = 1;
+    DialError_DIAL_ALREADY_PAIRED = 2;
+    DialError_DIAL_OPERATION_IN_PROGRESS = 3;
+    DialError_DIAL_PAIRED = 4;
+    DialError_DIAL_NOT_FOUND = 5;
+    DialError_DIAL_NOT_PAIRED = 6;
+  }
+  message DialStatusRequest {
+  }
+  message DialStatusResponse {
+    optional bool isPaired = 1;
+    optional bool isConnected = 2;
+    optional string name = 3;
+    optional string macAddress = 4;
+    optional int32 batteryLevel = 5;
+  }
+}
+// ===== com.navdy.service.library.events.file
+message FilePkg {
+  message FileListRequest {
+    required .navdy.FilePkg.FileType file_type = 1;
+  }
+  message FileListResponse {
+    required .navdy.RequestStatus status = 1;
+    optional string status_detail = 2;
+    required .navdy.FilePkg.FileType file_type = 3;
+    repeated string files = 4;
+  }
+  message FileTransferData {
+    required int32 transferId = 1;
+    required int32 chunkIndex = 2;
+    required bytes dataBytes = 3;
+    required bool lastChunk = 4;
+    optional string fileCheckSum = 5;
+  }
+  enum FileTransferError {
+    FileTransferError_FILE_TRANSFER_NO_ERROR = 1;
+    FileTransferError_FILE_TRANSFER_INSUFFICIENT_SPACE = 2;
+    FileTransferError_FILE_TRANSFER_ABORTED = 3;
+    FileTransferError_FILE_TRANSFER_IO_ERROR = 4;
+    FileTransferError_FILE_TRANSFER_ILLEGAL_CHUNK = 5;
+    FileTransferError_FILE_TRANSFER_NOT_INITIATED = 6;
+    FileTransferError_FILE_TRANSFER_PERMISSION_DENIED = 7;
+    FileTransferError_FILE_TRANSFER_CHECKSUM_ERROR = 8;
+    FileTransferError_FILE_TRANSFER_HOST_BUSY = 9;
+  }
+  message FileTransferRequest {
+    required .navdy.FilePkg.FileType fileType = 1;
+    optional string destinationFileName = 2;
+    optional int64 fileSize = 4;
+    optional int64 offset = 5;
+    optional string fileDataChecksum = 6;
+    optional bool override = 7;
+    optional bool supportsAcks = 8;
+  }
+  message FileTransferResponse {
+    optional int32 transferId = 1;
+    optional int64 offset = 2;
+    optional string checksum = 3;
+    required bool success = 4;
+    optional int32 maxChunkSize = 5;
+    optional .navdy.FilePkg.FileTransferError error = 6;
+    required .navdy.FilePkg.FileType fileType = 7;
+    required string destinationFileName = 8;
+    optional bool supportsAcks = 9;
+  }
+  message FileTransferStatus {
+    optional int32 transferId = 1;
+    required bool success = 2;
+    optional int64 totalBytesTransferred = 3;
+    optional .navdy.FilePkg.FileTransferError error = 4;
+    optional int32 chunkIndex = 5;
+    required bool transferComplete = 6;
+  }
+  enum FileType {
+    FileType_FILE_TYPE_OTA = 1;
+    FileType_FILE_TYPE_LOGS = 2;
+    FileType_FILE_TYPE_PERF_TEST = 3;
+  }
+  message PreviewFileRequest {
+    required string filename = 1;
+  }
+  message PreviewFileResponse {
+    required .navdy.RequestStatus status = 1;
+    optional string status_detail = 2;
+    optional string filename = 3;
+  }
+}
+// ===== com.navdy.service.library.events.glances
+message GlancesPkg {
+  enum CalendarConstants {
+    CalendarConstants_CALENDAR_TITLE = 0;
+    CalendarConstants_CALENDAR_TIME = 1;
+    CalendarConstants_CALENDAR_TIME_STR = 2;
+    CalendarConstants_CALENDAR_LOCATION = 3;
+  }
+  message CannedMessagesRequest {
+    optional int64 serial_number = 1;
+  }
+  message CannedMessagesUpdate {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    required int64 serial_number = 3;
+    repeated string cannedMessage = 4;
+  }
+  message ClearGlances {
+  }
+  enum EmailConstants {
+    EmailConstants_EMAIL_FROM_EMAIL = 0;
+    EmailConstants_EMAIL_FROM_NAME = 1;
+    EmailConstants_EMAIL_TO_EMAIL = 2;
+    EmailConstants_EMAIL_TO_NAME = 3;
+    EmailConstants_EMAIL_SUBJECT = 4;
+    EmailConstants_EMAIL_BODY = 5;
+  }
+  enum FuelConstants {
+    FuelConstants_FUEL_LEVEL = 0;
+    FuelConstants_NO_ROUTE = 1;
+    FuelConstants_GAS_STATION_NAME = 2;
+    FuelConstants_GAS_STATION_ADDRESS = 3;
+    FuelConstants_GAS_STATION_DISTANCE = 4;
+  }
+  enum GenericConstants {
+    GenericConstants_GENERIC_TITLE = 0;
+    GenericConstants_GENERIC_MESSAGE = 1;
+    GenericConstants_GENERIC_MAIN_ICON = 2;
+    GenericConstants_GENERIC_SIDE_ICON = 3;
+  }
+  message GlanceEvent {
+    enum GlanceActions {
+      GlanceActions_REPLY = 0;
+    }
+    enum GlanceType {
+      GlanceType_GLANCE_TYPE_CALENDAR = 0;
+      GlanceType_GLANCE_TYPE_EMAIL = 1;
+      GlanceType_GLANCE_TYPE_MESSAGE = 2;
+      GlanceType_GLANCE_TYPE_SOCIAL = 3;
+      GlanceType_GLANCE_TYPE_GENERIC = 4;
+      GlanceType_GLANCE_TYPE_FUEL = 5;
+    }
+    optional .navdy.GlancesPkg.GlanceEvent.GlanceType glanceType = 1;
+    optional string provider = 2;
+    optional string id = 3;
+    optional int64 postTime = 4;
+    repeated .navdy.GlancesPkg.KeyValue glanceData = 5;
+    repeated .navdy.GlancesPkg.GlanceEvent.GlanceActions actions = 6;
+    optional string language = 7;
+  }
+  enum GlanceIconConstants {
+    GlanceIconConstants_GLANCE_ICON_NAVDY_MAIN = 0;
+    GlanceIconConstants_GLANCE_ICON_MESSAGE_SIDE_BLUE = 1;
+  }
+  message KeyValue {
+    optional string key = 1;
+    optional string value = 2;
+  }
+  enum MessageConstants {
+    MessageConstants_MESSAGE_FROM = 0;
+    MessageConstants_MESSAGE_FROM_NUMBER = 1;
+    MessageConstants_MESSAGE_BODY = 2;
+    MessageConstants_MESSAGE_DOMAIN = 3;
+    MessageConstants_MESSAGE_IS_SMS = 4;
+  }
+  enum SocialConstants {
+    SocialConstants_SOCIAL_FROM = 0;
+    SocialConstants_SOCIAL_TO = 1;
+    SocialConstants_SOCIAL_MESSAGE = 2;
+  }
+}
+// ===== com.navdy.service.library.events.hudcontrol
+message HudcontrolPkg {
+  message AccelerateShutdown {
+    enum AccelerateReason {
+      AccelerateReason_ACCELERATE_REASON_UNKNOWN = 1;
+      AccelerateReason_ACCELERATE_REASON_HFP_DISCONNECT = 2;
+      AccelerateReason_ACCELERATE_REASON_WALKING = 3;
+    }
+    optional .navdy.HudcontrolPkg.AccelerateShutdown.AccelerateReason reason = 1;
+  }
+}
+// ===== com.navdy.service.library.events.input
+message InputPkg {
+  message DialSimulationEvent {
+    enum DialInputAction {
+      DialInputAction_DIAL_CLICK = 1;
+      DialInputAction_DIAL_LONG_CLICK = 2;
+      DialInputAction_DIAL_LEFT_TURN = 3;
+      DialInputAction_DIAL_RIGHT_TURN = 4;
+    }
+    required .navdy.InputPkg.DialSimulationEvent.DialInputAction dialAction = 1;
+  }
+  enum Gesture {
+    Gesture_GESTURE_SWIPE_LEFT = 1;
+    Gesture_GESTURE_SWIPE_RIGHT = 2;
+    Gesture_GESTURE_SWIPE_UP = 3;
+    Gesture_GESTURE_SWIPE_DOWN = 4;
+    Gesture_GESTURE_FINGER_UP = 5;
+    Gesture_GESTURE_FINGER = 6;
+    Gesture_GESTURE_FINGER_DOWN = 7;
+    Gesture_GESTURE_FINGER_TO_PINCH = 8;
+    Gesture_GESTURE_PINCH_TO_FINGER = 9;
+    Gesture_GESTURE_PINCH = 10;
+    Gesture_GESTURE_HAND_UP = 11;
+    Gesture_GESTURE_PALM = 12;
+    Gesture_GESTURE_HAND_TO_FIST = 13;
+    Gesture_GESTURE_FIST = 14;
+    Gesture_GESTURE_FIST_TO_HAND = 15;
+    Gesture_GESTURE_HAND_DOWN = 16;
+  }
+  message GestureEvent {
+    required .navdy.InputPkg.Gesture gesture = 1;
+    optional int32 x = 2;
+    optional int32 y = 3;
+  }
+  enum KeyEvent {
+    KeyEvent_KEY_DOWN = 1;
+    KeyEvent_KEY_UP = 2;
+  }
+  message LaunchAppEvent {
+    optional string appBundleID = 1;
+  }
+  enum MediaRemoteKey {
+    MediaRemoteKey_MEDIA_REMOTE_KEY_SIRI = 1;
+    MediaRemoteKey_MEDIA_REMOTE_KEY_PLAY = 2;
+    MediaRemoteKey_MEDIA_REMOTE_KEY_NEXT = 3;
+    MediaRemoteKey_MEDIA_REMOTE_KEY_PREV = 4;
+  }
+  message MediaRemoteKeyEvent {
+    required .navdy.InputPkg.MediaRemoteKey key = 1;
+    required .navdy.InputPkg.KeyEvent action = 2;
+  }
+}
+// ===== com.navdy.service.library.events.location
+message LocationPkg {
+  message Coordinate {
+    required double latitude = 1;
+    required double longitude = 2;
+    optional float accuracy = 3;
+    optional double altitude = 4;
+    optional float bearing = 5;
+    optional float speed = 6;
+    optional int64 timestamp = 7;
+    optional string provider = 8;
+  }
+  message LatLong {
+    required double latitude = 1;
+    required double longitude = 2;
+  }
+  message TransmitLocation {
+    optional bool sendLocation = 1;
+  }
+  message TripUpdateAck {
+    required int64 trip_number = 1;
+    required int32 sequence_number = 2;
+  }
+}
+// ===== com.navdy.service.library.events.messaging
+message MessagingPkg {
+  message SmsMessageRequest {
+    required string number = 1;
+    optional string message = 2;
+    optional string name = 3;
+    optional string id = 4;
+  }
+  message SmsMessageResponse {
+    required .navdy.RequestStatus status = 1;
+    optional string number = 2;
+    optional string name = 3;
+    optional string id = 4;
+  }
+}
+// ===== com.navdy.service.library.events.navigation
+message NavigationPkg {
+  enum DistanceUnit {
+    DistanceUnit_DISTANCE_MILES = 1;
+    DistanceUnit_DISTANCE_KMS = 2;
+    DistanceUnit_DISTANCE_FEET = 3;
+    DistanceUnit_DISTANCE_METERS = 4;
+  }
+  message GetNavigationSessionState {
+  }
+  message NavigationManeuverEvent {
+    required string currentRoad = 1;
+    required .navdy.NavigationPkg.NavigationTurn pending_turn = 2;
+    required string distance_to_pending_turn = 3;
+    required string pending_street = 4;
+    required string eta = 5;
+    required string speed = 6;
+    optional .navdy.NavigationPkg.NavigationSessionState navigationState = 7;
+    optional int64 etaUtcTime = 8;
+  }
+  message NavigationRouteCancelRequest {
+    optional string handle = 1;
+  }
+  message NavigationRouteRequest {
+    enum RouteAttribute {
+      RouteAttribute_ROUTE_ATTRIBUTE_GAS = 0;
+      RouteAttribute_ROUTE_ATTRIBUTE_SAVED_ROUTE = 1;
+    }
+    required .navdy.LocationPkg.Coordinate destination = 1;
+    optional string label = 2;
+    repeated .navdy.LocationPkg.Coordinate waypoints = 3;
+    optional string streetAddress = 4;
+    optional bool geoCodeStreetAddress = 5;
+    optional bool autoNavigate = 6;
+    optional string destination_identifier = 7;
+    optional .navdy.DestinationPkg.Destination.FavoriteType destinationType = 8;
+    optional bool originDisplay = 9;
+    optional bool cancelCurrent = 10;
+    optional string requestId = 11;
+    optional .navdy.LocationPkg.Coordinate destinationDisplay = 12;
+    repeated .navdy.NavigationPkg.NavigationRouteRequest.RouteAttribute routeAttributes = 13;
+    optional .navdy.DestinationPkg.Destination requestDestination = 14;
+  }
+  message NavigationRouteResponse {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    required .navdy.LocationPkg.Coordinate destination = 3;
+    optional string label = 4;
+    repeated .navdy.NavigationPkg.NavigationRouteResult results = 5;
+    optional bool consideredTraffic = 6;
+    optional string requestId = 7;
+  }
+  message NavigationRouteResult {
+    required string routeId = 1;
+    optional string label = 2;
+    repeated .navdy.LocationPkg.Coordinate geoPoints_OBSOLETE = 3;
+    required uint32 length = 4;
+    required uint32 duration = 5;
+    optional uint32 duration_traffic = 6;
+    repeated float routeLatLongs = 7 [packed = true];
+    optional string via = 8;
+    optional string address = 9;
+  }
+  message NavigationRouteStatus {
+    optional string handle = 1;
+    optional int32 progress = 2;
+    optional string requestId = 3;
+  }
+  message NavigationSessionDeferRequest {
+    required string requestId = 1;
+    optional string routeId = 2;
+    required int32 delay = 3;
+    optional bool originDisplay = 4;
+    optional int64 expireTimestamp = 5;
+  }
+  message NavigationSessionRequest {
+    required .navdy.NavigationPkg.NavigationSessionState newState = 1;
+    optional string label = 2;
+    optional string routeId = 3;
+    optional uint32 simulationSpeed = 4;
+    optional bool originDisplay = 5;
+  }
+  message NavigationSessionResponse {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    optional .navdy.NavigationPkg.NavigationSessionState pendingSessionState = 3;
+    optional string routeId = 4;
+  }
+  message NavigationSessionRouteChange {
+    enum RerouteReason {
+      RerouteReason_NAV_SESSION_OFF_REROUTE = 1;
+      RerouteReason_NAV_SESSION_TRAFFIC_REROUTE = 2;
+      RerouteReason_NAV_SESSION_ARRIVAL_REROUTE = 3;
+      RerouteReason_NAV_SESSION_FUEL_REROUTE = 4;
+      RerouteReason_NAV_SESSION_ROUTE_PICKER = 5;
+    }
+    optional string oldRouteId = 1;
+    optional .navdy.NavigationPkg.NavigationRouteResult newRoute = 2;
+    optional .navdy.NavigationPkg.NavigationSessionRouteChange.RerouteReason reason = 3;
+  }
+  enum NavigationSessionState {
+    NavigationSessionState_NAV_SESSION_ENGINE_NOT_READY = 1;
+    NavigationSessionState_NAV_SESSION_LOCATION_SERVICES_NOT_READY = 2;
+    NavigationSessionState_NAV_SESSION_STOPPED = 3;
+    NavigationSessionState_NAV_SESSION_STARTED = 4;
+    NavigationSessionState_NAV_SESSION_PAUSED = 5;
+    NavigationSessionState_NAV_SESSION_ERROR = 6;
+    NavigationSessionState_NAV_SESSION_REROUTED = 7;
+    NavigationSessionState_NAV_SESSION_ENGINE_READY = 8;
+    NavigationSessionState_NAV_SESSION_ARRIVED = 9;
+  }
+  message NavigationSessionStatusEvent {
+    required .navdy.NavigationPkg.NavigationSessionState sessionState = 1;
+    optional string label = 2;
+    optional string routeId = 3;
+    optional .navdy.NavigationPkg.NavigationRouteResult route = 4;
+    optional string destination_identifier = 5;
+  }
+  enum NavigationTurn {
+    NavigationTurn_NAV_TURN_START = 1;
+    NavigationTurn_NAV_TURN_EASY_LEFT = 2;
+    NavigationTurn_NAV_TURN_EASY_RIGHT = 3;
+    NavigationTurn_NAV_TURN_END = 4;
+    NavigationTurn_NAV_TURN_KEEP_LEFT = 5;
+    NavigationTurn_NAV_TURN_KEEP_RIGHT = 6;
+    NavigationTurn_NAV_TURN_LEFT = 7;
+    NavigationTurn_NAV_TURN_OUT_OF_ROUTE = 8;
+    NavigationTurn_NAV_TURN_RIGHT = 9;
+    NavigationTurn_NAV_TURN_SHARP_LEFT = 10;
+    NavigationTurn_NAV_TURN_SHARP_RIGHT = 11;
+    NavigationTurn_NAV_TURN_STRAIGHT = 12;
+    NavigationTurn_NAV_TURN_UTURN_LEFT = 13;
+    NavigationTurn_NAV_TURN_UTURN_RIGHT = 14;
+    NavigationTurn_NAV_TURN_ROUNDABOUT_SE = 15;
+    NavigationTurn_NAV_TURN_ROUNDABOUT_E = 16;
+    NavigationTurn_NAV_TURN_ROUNDABOUT_NE = 17;
+    NavigationTurn_NAV_TURN_ROUNDABOUT_N = 18;
+    NavigationTurn_NAV_TURN_ROUNDABOUT_NW = 19;
+    NavigationTurn_NAV_TURN_ROUNDABOUT_W = 20;
+    NavigationTurn_NAV_TURN_ROUNDABOUT_SW = 21;
+    NavigationTurn_NAV_TURN_ROUNDABOUT_S = 22;
+    NavigationTurn_NAV_TURN_FERRY = 23;
+    NavigationTurn_NAV_TURN_STATE_BOUNDARY = 24;
+    NavigationTurn_NAV_TURN_FOLLOW_ROUTE = 25;
+    NavigationTurn_NAV_TURN_EXIT_RIGHT = 26;
+    NavigationTurn_NAV_TURN_EXIT_LEFT = 27;
+    NavigationTurn_NAV_TURN_MOTORWAY = 28;
+    NavigationTurn_NAV_TURN_EXIT_ROUNDABOUT = 29;
+    NavigationTurn_NAV_TURN_UNKNOWN = 30;
+    NavigationTurn_NAV_TURN_MERGE_LEFT = 31;
+    NavigationTurn_NAV_TURN_MERGE_RIGHT = 32;
+  }
+  message RouteManeuver {
+    optional string currentRoad = 1;
+    optional .navdy.NavigationPkg.NavigationTurn pendingTurn = 2;
+    optional string pendingRoad = 3;
+    optional float distanceToPendingRoad = 4;
+    optional .navdy.NavigationPkg.DistanceUnit distanceToPendingRoadUnit = 5;
+    optional uint32 maneuverTime = 6;
+  }
+  message RouteManeuverRequest {
+    required string routeId = 1;
+  }
+  message RouteManeuverResponse {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    repeated .navdy.NavigationPkg.RouteManeuver maneuvers = 3;
+  }
+}
+// ===== com.navdy.service.library.events.notification
+message NotificationPkg {
+  message NotificationAction {
+    required string handler = 1;
+    required int32 id = 2;
+    required int32 notificationId = 3;
+    required int32 actionId = 4;
+    required int32 labelId = 5;
+    optional string label = 6;
+    optional int32 iconResource = 7;
+    optional int32 iconResourceFocused = 8;
+  }
+  enum NotificationCategory {
+    NotificationCategory_CATEGORY_OTHER = 0;
+    NotificationCategory_CATEGORY_INCOMING_CALL = 1;
+    NotificationCategory_CATEGORY_MISSED_CALL = 2;
+    NotificationCategory_CATEGORY_VOICE_MAIL = 3;
+    NotificationCategory_CATEGORY_SOCIAL = 4;
+    NotificationCategory_CATEGORY_SCHEDULE = 5;
+    NotificationCategory_CATEGORY_EMAIL = 6;
+    NotificationCategory_CATEGORY_NEWS = 7;
+    NotificationCategory_CATEGORY_HEALTH_AND_FITNESS = 8;
+    NotificationCategory_CATEGORY_BUSINESS_AND_FINANCE = 9;
+    NotificationCategory_CATEGORY_LOCATION = 10;
+    NotificationCategory_CATEGORY_ENTERTAINMENT = 11;
+  }
+  message NotificationEvent {
+    required int32 id = 1;
+    required .navdy.NotificationPkg.NotificationCategory category = 2;
+    optional string title = 3;
+    optional string subtitle = 4;
+    optional string message = 5;
+    optional string appId = 6;
+    repeated .navdy.NotificationPkg.NotificationAction actions = 7;
+    optional bytes photo = 8;
+    optional string iconResourceName = 9;
+    optional string imageResourceName = 10;
+    optional string sourceIdentifier = 11;
+    optional bool cannotReplyBack = 12;
+    optional string appName = 13;
+  }
+  message NotificationListRequest {
+  }
+  message NotificationListResponse {
+    required .navdy.RequestStatus status = 1;
+    optional string status_detail = 2;
+    repeated string ids = 3;
+  }
+  message NotificationSetting {
+    required string app = 1;
+    required bool enabled = 2;
+  }
+  enum NotificationsError {
+    NotificationsError_NOTIFICATIONS_ERROR_UNKNOWN = 1;
+    NotificationsError_NOTIFICATIONS_ERROR_AUTH_FAILED = 2;
+    NotificationsError_NOTIFICATIONS_ERROR_BOND_REMOVED = 3;
+  }
+  enum NotificationsState {
+    NotificationsState_NOTIFICATIONS_ENABLED = 1;
+    NotificationsState_NOTIFICATIONS_STOPPED = 2;
+    NotificationsState_NOTIFICATIONS_CONNECTING = 3;
+    NotificationsState_NOTIFICATIONS_PAIRING_FAILED = 4;
+    NotificationsState_NOTIFICATIONS_SERVICE_UNAVAILABLE = 5;
+  }
+  message NotificationsStatusRequest {
+    optional .navdy.NotificationPkg.NotificationsState newState = 1;
+    optional .navdy.NotificationPkg.ServiceType service = 2;
+  }
+  message NotificationsStatusUpdate {
+    required .navdy.NotificationPkg.NotificationsState state = 1;
+    optional .navdy.NotificationPkg.ServiceType service = 2;
+    optional .navdy.NotificationPkg.NotificationsError errorDetails = 3;
+  }
+  enum ServiceType {
+    ServiceType_SERVICE_ANCS = 1;
+    ServiceType_SERVICE_PANDORA = 2;
+  }
+  message ShowCustomNotification {
+    required string id = 1;
+  }
+}
+// ===== com.navdy.service.library.events.obd
+message ObdPkg {
+  message ObdStatusRequest {
+  }
+  message ObdStatusResponse {
+    required .navdy.RequestStatus status = 1;
+    required bool isConnected = 2;
+    optional string vin = 3;
+    optional int32 speed = 4;
+  }
+}
+// ===== com.navdy.service.library.events.photo
+message PhotoPkg {
+  message PhotoRequest {
+    required string identifier = 1;
+    optional string photoChecksum = 2;
+    optional .navdy.PhotoPkg.PhotoType photoType = 3;
+    optional string name = 4;
+  }
+  message PhotoResponse {
+    optional bytes photo = 1;
+    required .navdy.RequestStatus status = 2;
+    optional string statusDetail = 3;
+    required string identifier = 4;
+    optional string photoChecksum = 5;
+    optional .navdy.PhotoPkg.PhotoType photoType = 6;
+  }
+  enum PhotoType {
+    PhotoType_PHOTO_CONTACT = 0;
+    PhotoType_PHOTO_ALBUM_ART = 1;
+    PhotoType_PHOTO_DRIVER_PROFILE = 2;
+  }
+  message PhotoUpdate {
+    required string identifier = 1;
+    optional bytes photo = 2;
+    optional .navdy.PhotoPkg.PhotoType photoType = 3;
+  }
+  message PhotoUpdateQuery {
+    optional string identifier = 1;
+    optional .navdy.PhotoPkg.PhotoType photoType = 2;
+    optional int64 size = 3;
+    optional string checksum = 4;
+    optional string album = 5;
+    optional string track = 6;
+    optional string author = 7;
+  }
+  message PhotoUpdateQueryResponse {
+    optional string identifier = 1;
+    required bool updateRequired = 2;
+  }
+  message PhotoUpdatesRequest {
+    required bool start = 1;
+    optional .navdy.PhotoPkg.PhotoType photoType = 2;
+  }
+}
+// ===== com.navdy.service.library.events.places
+message PlacesPkg {
+  message AutoCompleteRequest {
+    required string partialSearch = 1;
+    optional int32 searchArea = 2;
+    optional int32 maxResults = 3;
+  }
+  message AutoCompleteResponse {
+    required string partialSearch = 1;
+    required .navdy.RequestStatus status = 2;
+    optional string statusDetail = 3;
+    repeated string results = 4;
+  }
+  message DestinationSelectedRequest {
+    optional string request_id = 1;
+    optional .navdy.DestinationPkg.Destination destination = 2;
+  }
+  message DestinationSelectedResponse {
+    optional string request_id = 1;
+    optional .navdy.RequestStatus request_status = 2;
+    optional .navdy.DestinationPkg.Destination destination = 3;
+  }
+  message FavoriteDestinationsUpdate {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    required int64 serial_number = 3;
+    repeated .navdy.DestinationPkg.Destination destinations = 4;
+  }
+  enum PlaceType {
+    PlaceType_PLACE_TYPE_UNKNOWN = 0;
+    PlaceType_PLACE_TYPE_ATM = 1;
+    PlaceType_PLACE_TYPE_BANK = 2;
+    PlaceType_PLACE_TYPE_SCHOOL = 3;
+    PlaceType_PLACE_TYPE_STORE = 4;
+    PlaceType_PLACE_TYPE_GAS = 5;
+    PlaceType_PLACE_TYPE_AIRPORT = 6;
+    PlaceType_PLACE_TYPE_PARKING = 7;
+    PlaceType_PLACE_TYPE_TRANSIT = 8;
+    PlaceType_PLACE_TYPE_BAR = 9;
+    PlaceType_PLACE_TYPE_ENTERTAINMENT = 10;
+    PlaceType_PLACE_TYPE_HOSPITAL = 11;
+    PlaceType_PLACE_TYPE_COFFEE = 12;
+    PlaceType_PLACE_TYPE_RESTAURANT = 13;
+    PlaceType_PLACE_TYPE_GYM = 14;
+    PlaceType_PLACE_TYPE_PARK = 15;
+    PlaceType_PLACE_TYPE_CONTACT = 1001;
+    PlaceType_PLACE_TYPE_CALENDAR_EVENT = 1002;
+  }
+  message PlaceTypeSearchRequest {
+    optional string request_id = 1;
+    optional .navdy.PlacesPkg.PlaceType place_type = 2;
+  }
+  message PlaceTypeSearchResponse {
+    optional string request_id = 1;
+    optional .navdy.RequestStatus request_status = 2;
+    repeated .navdy.DestinationPkg.Destination destinations = 3;
+  }
+  message PlacesSearchRequest {
+    required string searchQuery = 1;
+    optional int32 searchArea = 2;
+    optional int32 maxResults = 3;
+    optional string requestId = 4;
+  }
+  message PlacesSearchResponse {
+    required string searchQuery = 1;
+    required .navdy.RequestStatus status = 2;
+    optional string statusDetail = 3;
+    repeated .navdy.PlacesPkg.PlacesSearchResult results = 4;
+    optional string requestId = 5;
+  }
+  message PlacesSearchResult {
+    optional string label = 1;
+    optional .navdy.LocationPkg.Coordinate navigationPosition = 2;
+    optional .navdy.LocationPkg.Coordinate destinationLocation = 3;
+    optional string address = 4;
+    optional string category = 5;
+    optional double distance = 6;
+  }
+  message SuggestedDestination {
+    enum SuggestionType {
+      SuggestionType_SUGGESTION_RECOMMENDATION = 0;
+      SuggestionType_SUGGESTION_CALENDAR = 1;
+    }
+    required .navdy.DestinationPkg.Destination destination = 1;
+    optional uint32 duration_traffic = 2;
+    optional .navdy.PlacesPkg.SuggestedDestination.SuggestionType type = 3;
+  }
+}
+// ===== com.navdy.service.library.events.preferences
+message PreferencesPkg {
+  message AudioPreferences {
+    required int64 serial_number = 1;
+    optional bool drivingBehaviorAlerts = 2;
+  }
+  message AudioPreferencesRequest {
+    optional int64 serial_number = 1;
+  }
+  message AudioPreferencesUpdate {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    required int64 serial_number = 3;
+    optional .navdy.PreferencesPkg.AudioPreferences preferences = 4;
+  }
+  message DashboardPreferences {
+    optional .navdy.PreferencesPkg.MiddleGauge middleGauge = 1;
+    optional .navdy.PreferencesPkg.ScrollableSide scrollableSide = 2;
+    optional string rightGaugeId = 3;
+    optional string leftGaugeId = 4;
+  }
+  message DisplaySpeakerPreferences {
+    required int64 serial_number = 1;
+    optional bool master_sound = 2;
+    optional int32 volume_level = 3;
+    optional bool feedback_sound = 4;
+    optional bool notification_sound = 5;
+  }
+  message DisplaySpeakerPreferencesRequest {
+    optional int64 serial_number = 1;
+  }
+  message DisplaySpeakerPreferencesUpdate {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    required int64 serial_number = 3;
+    optional .navdy.PreferencesPkg.DisplaySpeakerPreferences preferences = 4;
+  }
+  message DriverProfilePreferences {
+    enum DialLongPressAction {
+      DialLongPressAction_DIAL_LONG_PRESS_VOICE_ASSISTANT = 0;
+      DialLongPressAction_DIAL_LONG_PRESS_PLACE_SEARCH = 1;
+    }
+    enum DisplayFormat {
+      DisplayFormat_DISPLAY_FORMAT_NORMAL = 0;
+      DisplayFormat_DISPLAY_FORMAT_COMPACT = 1;
+    }
+    enum FeatureMode {
+      FeatureMode_FEATURE_MODE_RELEASE = 1;
+      FeatureMode_FEATURE_MODE_BETA = 2;
+      FeatureMode_FEATURE_MODE_EXPERIMENTAL = 3;
+    }
+    enum ObdScanSetting {
+      ObdScanSetting_SCAN_DEFAULT_ON = 1;
+      ObdScanSetting_SCAN_ON = 2;
+      ObdScanSetting_SCAN_OFF = 3;
+      ObdScanSetting_SCAN_DEFAULT_OFF = 4;
+    }
+    enum UnitSystem {
+      UnitSystem_UNIT_SYSTEM_METRIC = 0;
+      UnitSystem_UNIT_SYSTEM_IMPERIAL = 1;
+    }
+    required int64 serial_number = 1;
+    optional string driver_name = 2;
+    optional string device_name = 3;
+    optional bool profile_is_public = 4;
+    optional string photo_checksum = 5;
+    optional string driver_email = 6;
+    optional string car_make = 7;
+    optional string car_model = 8;
+    optional string car_year = 9;
+    optional bool auto_on_enabled = 10;
+    optional .navdy.PreferencesPkg.DriverProfilePreferences.DisplayFormat display_format = 11;
+    optional string locale = 12;
+    optional .navdy.PreferencesPkg.DriverProfilePreferences.UnitSystem unit_system = 13;
+    optional .navdy.PreferencesPkg.DriverProfilePreferences.FeatureMode feature_mode = 14;
+    optional .navdy.PreferencesPkg.DriverProfilePreferences.ObdScanSetting obdScanSetting = 15;
+    optional bool limit_bandwidth = 16;
+    optional int64 obdBlacklistLastModified = 17;
+    optional .navdy.PreferencesPkg.DriverProfilePreferences.DialLongPressAction dial_long_press_action = 18;
+    repeated string additionalLocales = 19;
+  }
+  message DriverProfilePreferencesRequest {
+    optional int64 serial_number = 1;
+  }
+  message DriverProfilePreferencesUpdate {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    required int64 serial_number = 3;
+    optional .navdy.PreferencesPkg.DriverProfilePreferences preferences = 4;
+  }
+  message InputPreferences {
+    enum DialSensitivity {
+      DialSensitivity_DIAL_SENSITIVITY_STANDARD = 0;
+      DialSensitivity_DIAL_SENSITIVITY_LOW = 1;
+    }
+    required int64 serial_number = 1;
+    optional bool use_gestures = 2;
+    optional .navdy.PreferencesPkg.InputPreferences.DialSensitivity dial_sensitivity = 3;
+  }
+  message InputPreferencesRequest {
+    optional int64 serial_number = 1;
+  }
+  message InputPreferencesUpdate {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    required int64 serial_number = 3;
+    optional .navdy.PreferencesPkg.InputPreferences preferences = 4;
+  }
+  message LocalPreferences {
+    optional bool manualZoom = 1;
+    optional float manualZoomLevel = 2;
+    optional .navdy.SettingsPkg.DateTimeConfiguration.Clock clockFormat = 3;
+  }
+  enum MiddleGauge {
+    MiddleGauge_SPEEDOMETER = 1;
+    MiddleGauge_TACHOMETER = 2;
+  }
+  message NavigationPreferences {
+    enum RerouteForTraffic {
+      RerouteForTraffic_REROUTE_CONFIRM = 0;
+      RerouteForTraffic_REROUTE_AUTOMATIC = 1;
+      RerouteForTraffic_REROUTE_NEVER = 2;
+    }
+    enum RoutingType {
+      RoutingType_ROUTING_FASTEST = 0;
+      RoutingType_ROUTING_SHORTEST = 1;
+    }
+    required int64 serial_number = 1;
+    optional .navdy.PreferencesPkg.NavigationPreferences.RerouteForTraffic rerouteForTraffic = 2;
+    optional .navdy.PreferencesPkg.NavigationPreferences.RoutingType routingType = 3;
+    optional bool spokenTurnByTurn = 4;
+    optional bool spokenSpeedLimitWarnings = 5;
+    optional bool showTrafficInOpenMap = 6;
+    optional bool showTrafficWhileNavigating = 7;
+    optional bool allowHighways = 8;
+    optional bool allowTollRoads = 9;
+    optional bool allowFerries = 10;
+    optional bool allowTunnels = 11;
+    optional bool allowUnpavedRoads = 12;
+    optional bool allowAutoTrains = 13;
+    optional bool allowHOVLanes = 14;
+    optional bool spokenCameraWarnings = 15;
+    optional bool phoneticTurnByTurn = 16;
+  }
+  message NavigationPreferencesRequest {
+    optional int64 serial_number = 1;
+  }
+  message NavigationPreferencesUpdate {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    required int64 serial_number = 3;
+    optional .navdy.PreferencesPkg.NavigationPreferences preferences = 4;
+  }
+  message NotificationPreferences {
+    required int64 serial_number = 1;
+    repeated .navdy.NotificationPkg.NotificationSetting settings = 2;
+    optional bool enabled = 3;
+    optional bool readAloud = 4;
+    optional bool showContent = 5;
+  }
+  message NotificationPreferencesRequest {
+    optional int64 serial_number = 1;
+  }
+  message NotificationPreferencesUpdate {
+    required .navdy.RequestStatus status = 1;
+    optional string statusDetail = 2;
+    required int64 serial_number = 3;
+    optional .navdy.PreferencesPkg.NotificationPreferences preferences = 4;
+  }
+  enum ScrollableSide {
+    ScrollableSide_LEFT = 1;
+    ScrollableSide_RIGHT = 2;
+  }
+}
+// ===== com.navdy.service.library.events.settings
+message SettingsPkg {
+  message DateTimeConfiguration {
+    enum Clock {
+      Clock_CLOCK_24_HOUR = 1;
+      Clock_CLOCK_12_HOUR = 2;
+    }
+    required int64 timestamp = 1;
+    required string timezone = 2;
+    optional .navdy.SettingsPkg.DateTimeConfiguration.Clock format = 3;
+  }
+  message NetworkStateChange {
+    optional bool networkAvailable = 1;
+    optional bool cellNetwork = 2;
+    optional bool wifiNetwork = 3;
+    optional bool reachability = 4;
+  }
+  message ReadSettingsRequest {
+    repeated string settings = 1;
+  }
+  message ReadSettingsResponse {
+    required .navdy.SettingsPkg.ScreenConfiguration screenConfiguration = 1;
+    repeated .navdy.SettingsPkg.Setting settings = 2;
+  }
+  message ScreenConfiguration {
+    required int32 marginLeft = 1;
+    required int32 marginTop = 2;
+    required int32 marginRight = 3;
+    required int32 marginBottom = 4;
+    required float scaleX = 5;
+    required float scaleY = 6;
+  }
+  message Setting {
+    required string key = 1;
+    required string value = 2;
+  }
+  message UpdateSettings {
+    optional .navdy.SettingsPkg.ScreenConfiguration screenConfiguration = 1;
+    repeated .navdy.SettingsPkg.Setting settings = 2;
+  }
+}
+// ===== com.navdy.service.library.events.ui
+message UiPkg {
+  message DismissScreen {
+    required .navdy.UiPkg.Screen screen = 1;
+  }
+  enum Screen {
+    Screen_SCREEN_DASHBOARD = 1;
+    Screen_SCREEN_TURN_BY_TURN = 2;
+    Screen_SCREEN_HYBRID_MAP = 3;
+    Screen_SCREEN_MEDIA_BROWSER = 4;
+    Screen_SCREEN_MENU = 5;
+    Screen_SCREEN_NOTIFICATION = 6;
+    Screen_SCREEN_CALL_CONTROL = 7;
+    Screen_SCREEN_MUSIC = 8;
+    Screen_SCREEN_VOICE_CONTROL = 9;
+    Screen_SCREEN_RECENT_CALLS = 10;
+    Screen_SCREEN_BACK = 11;
+    Screen_SCREEN_CONTEXT_MENU = 12;
+    Screen_SCREEN_CAROUSEL_MENU = 13;
+    Screen_SCREEN_OPTIONS = 14;
+    Screen_SCREEN_PLACES = 15;
+    Screen_SCREEN_OTA_CONFIRMATION = 16;
+    Screen_SCREEN_WELCOME = 17;
+    Screen_SCREEN_FAVORITE_CONTACTS = 18;
+    Screen_SCREEN_FAVORITE_PLACES = 19;
+    Screen_SCREEN_BRIGHTNESS = 20;
+    Screen_SCREEN_RECOMMENDED_PLACES = 21;
+    Screen_SCREEN_REPLY_MESSAGE = 22;
+    Screen_SCREEN_READ_MESSAGE = 23;
+    Screen_SCREEN_MAP_ANIMATION_MODE = 24;
+    Screen_SCREEN_SHUTDOWN_CONFIRMATION = 25;
+    Screen_SCREEN_DIAL_PAIRING = 26;
+    Screen_SCREEN_SETTINGS = 27;
+    Screen_SCREEN_AUTO_BRIGHTNESS = 28;
+    Screen_SCREEN_FACTORY_RESET = 29;
+    Screen_SCREEN_BLUETOOTH_PAIRING = 30;
+    Screen_SCREEN_REPORT_ISSUE = 31;
+    Screen_SCREEN_HOME = 32;
+    Screen_SCREEN_TOAST = 33;
+    Screen_SCREEN_DIAL_UPDATE_PROGRESS = 34;
+    Screen_SCREEN_FIRST_LAUNCH = 35;
+    Screen_SCREEN_FORCE_UPDATE = 36;
+    Screen_SCREEN_TEMPERATURE_WARNING = 37;
+    Screen_SCREEN_DIAL_UPDATE_CONFIRMATION = 38;
+    Screen_SCREEN_GESTURE_LEARNING = 39;
+    Screen_SCREEN_SYSTEM_INFO = 40;
+    Screen_SCREEN_MAIN_MENU = 41;
+    Screen_SCREEN_DESTINATION_PICKER = 42;
+    Screen_SCREEN_MUSIC_DETAILS = 43;
+  }
+  message ShowScreen {
+    required .navdy.UiPkg.Screen screen = 1;
+    repeated .navdy.GlancesPkg.KeyValue arguments = 2;
+  }
+}

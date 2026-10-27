@@ -1,0 +1,48 @@
+# XcodeGen spec — the .xcodeproj is generated in CI (`xcodegen generate`), so no Mac is needed
+# to edit the project. Built unsigned; Sideloadly/AltStore re-signs it with your Apple ID.
+name: NavdyHUD
+options:
+  bundleIdPrefix: tw.navdy.community
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  NavdyWire:
+    path: Packages/NavdyWire
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  NavdyHUD:
+    type: application
+    platform: iOS
+    sources: [NavdyHUD]
+    dependencies:
+      - package: NavdyWire
+        product: NavdyWire
+      - package: NavdyWire
+        product: NavdyPlaces
+    scheme: {}
+    info:
+      path: NavdyHUD/Info.plist
+      properties:
+        CFBundleDisplayName: Navdy HUD
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # Protocol strings advertised by the HUD firmware (com.navdy.hud.mfi.iAPProcessor)
+        UISupportedExternalAccessoryProtocols:
+          - com.navdy.hud.api.v1
+          - com.navdy.hud.proxy.v1
+        UIBackgroundModes: [external-accessory]
+        NSLocationWhenInUseUsageDescription: 用來優先搜尋你附近的目的地。
+        NSBluetoothAlwaysUsageDescription: 用來連接 Navdy HUD。
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: tw.navdy.community.hud
+        TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_FILE: NavdyHUD/Info.plist
