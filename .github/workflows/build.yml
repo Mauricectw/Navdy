@@ -33,6 +33,7 @@ jobs:
         run: .github/scripts/run-and-annotate.sh test-macos.log macos-tests -- swift test --package-path Packages/NavdyWire
 
       - name: Build (no code signing)
+        if: success() || failure()   # still compile the app when the package tests fail
         run: |
           .github/scripts/run-and-annotate.sh build.log xcodebuild -- xcodebuild \
             -project NavdyHUD.xcodeproj \

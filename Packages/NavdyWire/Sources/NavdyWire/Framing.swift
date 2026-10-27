@@ -30,9 +30,10 @@ public struct Deframer {
         buffer.append(contentsOf: chunk)
         var events: [Data] = []
         while buffer.count >= Framing.headerLength {
-            guard buffer[0] == 0x0D else {
+            let tag = buffer[0]
+            guard tag == 0x0D else {
                 buffer.removeAll()
-                throw ProtoError("bad frame header 0x\(String(buffer[0], radix: 16))")
+                throw ProtoError("bad frame header 0x\(String(tag, radix: 16))")
             }
             let size = Int(buffer[1]) | Int(buffer[2]) << 8 | Int(buffer[3]) << 16 | Int(buffer[4]) << 24
             guard size > 0, size <= Framing.maxEventSize else {
