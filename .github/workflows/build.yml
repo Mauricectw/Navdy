@@ -11,15 +11,15 @@ jobs:
     # The protocol layer is Foundation-only, so it is tested on cheap Linux minutes too.
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: swift-actions/setup-swift@v2
-      - run: swift test --package-path Packages/NavdyWire
+      - name: Protocol tests (Linux)
+        run: .github/scripts/run-and-annotate.sh test-linux.log linux-tests -- swift test --package-path Packages/NavdyWire
 
   ios:
-    needs: protocol-tests
     runs-on: xcode-27   # Xcode 27 / iOS 27 SDK, Apple Silicon
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Tools
         run: |
@@ -27,15 +27,14 @@ jobs:
           brew install xcodegen
 
       - name: Generate Xcode project
-        run: xcodegen generate
+        run: .github/scripts/run-and-annotate.sh xcodegen.log xcodegen -- xcodegen generate
 
       - name: Protocol tests (macOS)
-        run: swift test --package-path Packages/NavdyWire
+        run: .github/scripts/run-and-annotate.sh test-macos.log macos-tests -- swift test --package-path Packages/NavdyWire
 
       - name: Build (no code signing)
         run: |
-          set -o pipefail
-          xcodebuild \
+          .github/scripts/run-and-annotate.sh build.log xcodebuild -- xcodebuild \
             -project NavdyHUD.xcodeproj \
             -scheme NavdyHUD \
             -configuration Release \
@@ -43,7 +42,7 @@ jobs:
             -destination 'generic/platform=iOS' \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            build | tee build.log | grep -E "error:|warning: .*NavdyHUD|BUILD" || true
+            build
           test -d build/Build/Products/Release-iphoneos/NavdyHUD.app
 
       - name: Package IPA
