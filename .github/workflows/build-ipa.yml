@@ -17,6 +17,8 @@ jobs:
 
   ios:
     runs-on: xcode-27
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v5
 
@@ -46,6 +48,29 @@ jobs:
           mkdir -p Payload
           cp -R build/Build/Products/Release-iphoneos/ZonozLocalStream.app Payload/
           zip -qry ZONOZ-LocalStream-unsigned.ipa Payload
+
+      - name: Inspect IPA
+        run: |
+          ls -lh ZONOZ-LocalStream-unsigned.ipa
+          unzip -l ZONOZ-LocalStream-unsigned.ipa | tail -n 15
+          APP=Payload/ZonozLocalStream.app
+          for k in CFBundleIdentifier CFBundleShortVersionString MinimumOSVersion UIBackgroundModes NSBonjourServices UIFileSharingEnabled; do
+            printf '%s = ' "$k"; /usr/libexec/PlistBuddy -c "Print :$k" "$APP/Info.plist" | tr '\n' ' '; echo
+          done
+          file "$APP/ZonozLocalStream"
+          lipo -info "$APP/ZonozLocalStream"
+
+      - name: Publish to release (direct download)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=zonoz-ios-latest
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --target "$GITHUB_SHA" --prerelease \
+              --title "ZONOZ Local Stream iOS (unsigned test build)" \
+              --notes "未簽名 IPA，用 Sideloadly 以自己的 Apple ID 簽名安裝。每次推送 zonoz-ios 分支都會覆蓋。"
+          gh release upload "$TAG" ZONOZ-LocalStream-unsigned.ipa --clobber
+          echo "build: $GITHUB_SHA" 
 
       - uses: actions/upload-artifact@v4
         with:
