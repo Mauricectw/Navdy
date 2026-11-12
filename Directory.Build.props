@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <!-- 核心與測試預設跟 App 一樣用 .NET 10；只有 .NET 8 SDK 的環境可用 -p:CoreTfm=net8.0 覆寫 -->
+    <CoreTfm Condition="'$(CoreTfm)' == ''">net10.0</CoreTfm>
+    <Version>1.2.1</Version>
+    <Authors>ZONOZ Local Stream contributors</Authors>
+    <Product>ZONOZ Local Stream</Product>
+  </PropertyGroup>
+</Project>

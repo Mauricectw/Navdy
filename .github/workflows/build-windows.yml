@@ -1,0 +1,77 @@
+name: Build ZONOZ for Windows
+
+on:
+  push:
+    branches: [zonoz-windows]
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      PYTHON: python
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Offline tests (logic, HTTP server, engine vs fake speaker)
+        shell: bash
+        run: .github/scripts/run-and-annotate.sh tests.log logic-tests -- Tests/run_tests.sh
+
+      - name: Publish (self-contained single exe)
+        if: success() || failure()
+        shell: bash
+        run: |
+          .github/scripts/run-and-annotate.sh build.log publish -- dotnet publish Zonoz.App -c Release -r win-x64 \
+            --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+            -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish
+          ls -l publish
+
+      # 把編好的程式真的開起來：掃描測試音檔、連上假音箱、播放、把每個分頁畫成 PNG
+      - name: Smoke test (real app, fake speaker)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force smoke | Out-Null
+          $fake = Start-Process python -ArgumentList 'Tests/fake_sonos.py','--fetch' -PassThru -WindowStyle Hidden
+          Start-Sleep -Seconds 2
+          $appArgs = @('--smoke', "$PWD\smoke", '--data', "$PWD\smoke\data", '--library', "$PWD\Tests\media", '--speaker', '127.0.0.1')
+          $app = Start-Process "$PWD\publish\ZonozLocalStream.exe" -ArgumentList $appArgs -PassThru
+          $finished = $app.WaitForExit(150000)
+          if (-not $finished) { $app.Kill(); 'timeout' | Out-File smoke\timeout.txt }
+          try { Invoke-WebRequest http://127.0.0.1:1400/__state -OutFile smoke\fake_state.json -TimeoutSec 5 } catch { $_ | Out-File smoke\fake_state_error.txt }
+          try { Invoke-WebRequest http://127.0.0.1:1400/__quit -Method Post -TimeoutSec 3 | Out-Null } catch { }
+          Stop-Process -Id $fake.Id -ErrorAction SilentlyContinue
+          Get-ChildItem smoke | Format-Table Name, Length
+          if (Test-Path smoke\smoke.json) { Get-Content smoke\smoke.json -Encoding utf8 }
+          if (Test-Path smoke\crash.txt) { Get-Content smoke\crash.txt }
+          $code = if ($finished) { $app.ExitCode } else { 99 }
+          if ($code -ne 0) { Write-Output "::error title=smoke::app exited with $code"; exit 1 }
+
+      - name: Publish to release (direct download)
+        if: always()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=zonoz-windows-latest
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --target "$GITHUB_SHA" --prerelease \
+              --title "ZONOZ Local Stream for Windows (test build)" \
+              --notes "Windows 10 / 11 x64，免安裝，下載 exe 直接執行。每次推送 zonoz-windows 分支都會覆蓋。"
+          files=()
+          [ -f publish/ZonozLocalStream.exe ] && files+=(publish/ZonozLocalStream.exe)
+          mkdir -p diag && cp -f tests.log build.log diag/ 2>/dev/null || true
+          cp -rf smoke/*.png smoke/*.json smoke/*.txt smoke/*.log diag/ 2>/dev/null || true
+          echo "$GITHUB_SHA" > diag/commit.txt
+          (cd diag && tar -czf ../zonoz-windows-diag.tar.gz .)
+          files+=(zonoz-windows-diag.tar.gz)
+          gh release upload "$TAG" "${files[@]}" --clobber

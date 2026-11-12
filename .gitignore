@@ -1,0 +1,8 @@
+bin/
+obj/
+publish/
+smoke/
+Tests/out/
+*.log
+*.user
+.vs/

@@ -1,0 +1,362 @@
+<Window x:Class="Zonoz.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding WindowTitle}" Width="1180" Height="780" MinWidth="900" MinHeight="560"
+        WindowStartupLocation="CenterScreen" FontFamily="Segoe UI, Microsoft JhengHei UI" FontSize="14"
+        PreviewKeyDown="Window_PreviewKeyDown" Closing="Window_Closing">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <Style x:Key="Dim" TargetType="TextBlock">
+            <Setter Property="Opacity" Value="0.65"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Opacity" Value="0.8"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        <Style x:Key="CellText" TargetType="TextBlock">
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 左側：音箱 -->
+            <Border Grid.Column="0" BorderThickness="0,0,1,0" BorderBrush="#33808080" Padding="16,14,14,12">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="音箱" Style="{StaticResource SectionTitle}"/>
+
+                    <StackPanel DockPanel.Dock="Bottom">
+                        <TextBlock Text="{Binding StreamInfo}" Style="{StaticResource Dim}" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                        <TextBlock Style="{StaticResource Dim}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                   Text="第一次播放時 Windows 防火牆會詢問是否允許，請勾選「私人網路」。"/>
+                    </StackPanel>
+
+                    <Grid DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="ManualIpBox" Grid.Column="0" KeyDown="ManualIpBox_KeyDown"
+                                 ToolTip="手動輸入音箱 IP，例如 192.168.1.20"/>
+                        <Button Grid.Column="1" Content="加入 IP" Margin="6,0,0,0" Click="AddManual_Click"/>
+                    </Grid>
+
+                    <Button DockPanel.Dock="Bottom" Margin="0,10,0,0" HorizontalAlignment="Stretch" Click="ScanSpeakers_Click"
+                            IsEnabled="{Binding SpeakerScanningInverse}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE72C;" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding ScanButtonText}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Grid>
+                        <TextBlock Text="還沒找到音箱。請確認電腦與 Sonos 在同一個區域網路，或在下方手動輸入音箱 IP。"
+                                   TextWrapping="Wrap" Style="{StaticResource Dim}" FontSize="13"
+                                   Visibility="{Binding NoSpeakers, Converter={StaticResource BoolToVis}}"/>
+                        <ItemsControl x:Name="DeviceList" ItemsSource="{Binding Devices}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=OneWay}" IsEnabled="{Binding CanSelect}"
+                                                  Click="DeviceCheck_Click" VerticalAlignment="Top" Margin="0,0,4,0" MinWidth="0"/>
+                                        <StackPanel Grid.Column="1">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Generation}" Style="{StaticResource Dim}" Margin="6,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Subtitle}" Style="{StaticResource Dim}" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding Status}" FontSize="12" Foreground="{StaticResource AccentBrush}"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Click="RemoveDevice_Click" ToolTip="從清單移除" VerticalAlignment="Top"
+                                                Padding="6,2" Background="Transparent" BorderThickness="0">
+                                            <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE711;" FontSize="11" Opacity="0.6"/>
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </DockPanel>
+            </Border>
+
+            <!-- 右側：分頁 -->
+            <TabControl x:Name="Tabs" Grid.Column="1" Margin="10,8,10,0">
+                <TabItem Header="曲庫">
+                    <Grid Margin="4,10,4,4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <DockPanel Grid.Row="0" Margin="0,0,0,10" LastChildFill="True">
+                            <Button DockPanel.Dock="Right" Content="重新掃描" Margin="8,0,0,0" Click="Rescan_Click"/>
+                            <Button DockPanel.Dock="Right" Content="加入資料夾…" Margin="8,0,0,0" Click="AddFolder_Click"/>
+                            <CheckBox DockPanel.Dock="Right" Content="只看收藏" IsChecked="{Binding FavoritesOnly}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding SortNames}" SelectedIndex="{Binding SortIndex}" Width="130" Margin="8,0,0,0"/>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding LibraryStatus}" Style="{StaticResource Dim}" VerticalAlignment="Center" Margin="12,0,4,0"/>
+                            <TextBox x:Name="SearchBox" Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" ToolTip="搜尋歌名、演出者、專輯（Ctrl+F）"/>
+                        </DockPanel>
+
+                        <ListView x:Name="TrackList" Grid.Row="1" ItemsSource="{Binding VisibleTracks}" SelectionMode="Single"
+                                  MouseDoubleClick="TrackList_MouseDoubleClick" KeyDown="TrackList_KeyDown"
+                                  VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListView.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="播放" Click="TrackPlay_Click"/>
+                                    <MenuItem Header="下一首播放" Click="TrackPlayNext_Click"/>
+                                    <MenuItem Header="加入 / 取消收藏" Click="TrackFavorite_Click"/>
+                                    <Separator/>
+                                    <MenuItem Header="在檔案總管中顯示" Click="TrackReveal_Click"/>
+                                </ContextMenu>
+                            </ListView.ContextMenu>
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Width="34">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock FontFamily="{StaticResource IconFont}" Text="{Binding Heart}" Foreground="#E0457B" FontSize="12"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="歌名" Width="300">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate><TextBlock Text="{Binding Title}" Style="{StaticResource CellText}"/></DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="演出者" Width="170">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate><TextBlock Text="{Binding Artist}" Style="{StaticResource CellText}"/></DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="專輯" Width="170">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate><TextBlock Text="{Binding Album}" Style="{StaticResource CellText}"/></DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="格式" Width="100">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate><TextBlock Text="{Binding Badge}" Style="{StaticResource CellText}"/></DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="時長" Width="64">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate><TextBlock Text="{Binding Duration}" Style="{StaticResource CellText}"/></DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+
+                        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="460"
+                                    Visibility="{Binding LibraryEmpty, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="曲庫是空的" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                            <TextBlock TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,14" Opacity="0.7"
+                                       Text="按「加入資料夾…」選擇放音樂的資料夾（會包含子資料夾）。支援 MP3、M4A / MP4（含 Dolby Atmos 的 E-AC-3）、FLAC、WAV、AIFF、OGG。"/>
+                            <Button Content="加入資料夾…" HorizontalAlignment="Center" Click="AddFolder_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="{Binding QueueHeader}">
+                    <ListView x:Name="QueueList" ItemsSource="{Binding Queue}" Margin="4,10,4,4" SelectionMode="Single"
+                              MouseDoubleClick="QueueList_MouseDoubleClick" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListView.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="播放這一首" Click="QueuePlay_Click"/>
+                                <MenuItem Header="從清單移除" Click="QueueRemove_Click"/>
+                            </ContextMenu>
+                        </ListView.ContextMenu>
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="#" Width="52">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate><TextBlock Text="{Binding Number}" Style="{StaticResource CellText}"/></DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="歌名" Width="380">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate><TextBlock Text="{Binding Title}" Style="{StaticResource CellText}"/></DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="演出者" Width="260">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate><TextBlock Text="{Binding Artist}" Style="{StaticResource CellText}"/></DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="時長" Width="70">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate><TextBlock Text="{Binding Duration}" Style="{StaticResource CellText}"/></DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </TabItem>
+
+                <TabItem Header="設定">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="10,14,10,10" MaxWidth="760" HorizontalAlignment="Left">
+                            <TextBlock Text="曲庫資料夾" Style="{StaticResource SectionTitle}"/>
+                            <ItemsControl ItemsSource="{Binding Folders}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <DockPanel Margin="0,0,0,6">
+                                            <Button DockPanel.Dock="Right" Content="移除" Click="RemoveFolder_Click" Margin="8,0,0,0"/>
+                                            <TextBlock Text="{Binding}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Content="加入資料夾…" HorizontalAlignment="Left" Margin="0,4,0,0" Click="AddFolder_Click"/>
+                            <TextBlock Style="{StaticResource Dim}" TextWrapping="Wrap" Margin="0,8,0,22"
+                                       Text="Sonos 本地播放上限 48 kHz；WAV / AIFF 只支援 16 bit。超出規格的檔案會被擋下並提示。"/>
+
+                            <TextBlock Text="電源" Style="{StaticResource SectionTitle}"/>
+                            <CheckBox Content="播放期間不讓電腦進入睡眠" IsChecked="{Binding KeepAwake}"/>
+                            <TextBlock Style="{StaticResource Dim}" TextWrapping="Wrap" Margin="0,6,0,22"
+                                       Text="音樂是由音箱回頭向這台電腦抓取的，電腦一睡眠音樂就會中斷。螢幕仍會照常關閉。關閉本程式時會停止音箱上的播放。"/>
+
+                            <TextBlock Text="連線排錯" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6" Text="{Binding StreamInfo}"/>
+                            <TextBlock Style="{StaticResource Dim}" TextWrapping="Wrap" Margin="0,0,0,22"
+                                       Text="用同一個網路上的手機瀏覽器開上面的網址：看得到頁面就代表音箱也連得到。看不到通常是 Windows 防火牆沒有允許 ZonozLocalStream（設定 → 隱私權與安全性 → Windows 安全性 → 防火牆 → 允許應用程式通過防火牆），或網路被設成「公用」、開著 VPN。"/>
+
+                            <TextBlock Text="關於" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6"
+                                       Text="ZONOZ Local Stream 的非官方 Windows 移植版（1.2.1）。完全在區域網路內運作：沒有帳號、沒有雲端、不連外部網路。與 Sonos, Inc. 無關。"/>
+                            <TextBlock Style="{StaticResource Dim}" TextWrapping="Wrap"
+                                       Text="原專案：github.com/Chris94666/ZONOZ-LOCAL-STREAM（MIT License，Copyright (c) 2026 大气放电现象）。標籤讀取使用 Audio Tools Library（MIT）。"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <TabItem Header="日誌">
+                    <DockPanel Margin="4,10,4,4">
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="複製全部" Click="CopyLog_Click"/>
+                            <Button Content="清除" Margin="8,0,0,0" Click="ClearLog_Click"/>
+                            <TextBlock Text="最新的在最上面" Style="{StaticResource Dim}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                        </StackPanel>
+                        <ListBox ItemsSource="{Binding Log}" FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 VirtualizingPanel.IsVirtualizing="True">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Line}" TextWrapping="Wrap"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </TabItem>
+            </TabControl>
+        </Grid>
+
+        <!-- 提示橫幅 -->
+        <Border Grid.Row="1" Background="#26E86B21" Padding="16,9" Visibility="{Binding HasHint, Converter={StaticResource BoolToVis}}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Left" FontFamily="{StaticResource IconFont}" Text="&#xE7BA;" Foreground="{StaticResource AccentBrush}"
+                           VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBlock Text="{Binding HintText}" TextWrapping="Wrap" FontSize="13"/>
+            </DockPanel>
+        </Border>
+
+        <!-- 播放列 -->
+        <Border Grid.Row="2" BorderThickness="0,1,0,0" BorderBrush="#33808080" Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="220"/>
+                </Grid.ColumnDefinitions>
+
+                <DockPanel Grid.Column="0">
+                    <Border DockPanel.Dock="Left" Width="64" Height="64" CornerRadius="6" Background="#22808080" Margin="0,0,12,0" ClipToBounds="True">
+                        <Grid>
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE8D6;" FontSize="26" Opacity="0.45"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Image Source="{Binding Cover}" Stretch="UniformToFill"/>
+                        </Grid>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding NowTitle}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding NowSubtitle}" Style="{StaticResource Dim}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                        <TextBlock Text="{Binding NowBadge}" FontSize="11" Foreground="{StaticResource AccentBrush}" Margin="0,3,0,0"
+                                   Visibility="{Binding HasBadge, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                </DockPanel>
+
+                <StackPanel Grid.Column="1" Margin="16,0">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <ToggleButton IsChecked="{Binding ShuffleOn, Mode=OneWay}" Click="Shuffle_Click" ToolTip="隨機播放" Width="40" Height="34" Margin="4,0">
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE8B1;"/>
+                        </ToggleButton>
+                        <Button Click="Previous_Click" ToolTip="上一首" Width="44" Height="34" Margin="4,0">
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE892;"/>
+                        </Button>
+                        <Button x:Name="PlayButton" Click="PlayPause_Click" ToolTip="播放 / 暫停（空白鍵）" Width="60" Height="38" Margin="4,0">
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{Binding PlayGlyph}" FontSize="18"/>
+                        </Button>
+                        <Button Click="Next_Click" ToolTip="下一首" Width="44" Height="34" Margin="4,0">
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE893;"/>
+                        </Button>
+                        <Button Click="Repeat_Click" ToolTip="列表循環 / 單曲循環" Width="40" Height="34" Margin="4,0">
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="{Binding RepeatGlyph}"/>
+                        </Button>
+                        <Button Click="Stop_Click" ToolTip="停止" Width="40" Height="34" Margin="4,0">
+                            <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE71A;"/>
+                        </Button>
+                    </StackPanel>
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="56"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="56"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="PositionLabel" Grid.Column="0" Text="{Binding PositionText}" Style="{StaticResource Dim}" TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Slider x:Name="PositionSlider" Grid.Column="1" Minimum="0" Maximum="{Binding DurationValue, Mode=OneWay}"
+                                Value="{Binding PositionValue, Mode=OneWay}" IsMoveToPointEnabled="True" IsEnabled="{Binding CanSeek}"
+                                PreviewMouseLeftButtonDown="PositionSlider_Down" PreviewMouseLeftButtonUp="PositionSlider_Up"
+                                ValueChanged="PositionSlider_ValueChanged" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding DurationText}" Style="{StaticResource Dim}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" FontFamily="{StaticResource IconFont}" Text="&#xE767;" VerticalAlignment="Center" Opacity="0.7" Margin="0,0,8,0"/>
+                        <TextBlock x:Name="VolumeLabel" DockPanel.Dock="Right" Text="{Binding VolumeText}" Style="{StaticResource Dim}" Width="26" TextAlignment="Right" VerticalAlignment="Center"/>
+                        <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" Value="{Binding VolumeValue, Mode=OneWay}" IsMoveToPointEnabled="True"
+                                PreviewMouseLeftButtonDown="VolumeSlider_Down" PreviewMouseLeftButtonUp="VolumeSlider_Up"
+                                ValueChanged="VolumeSlider_ValueChanged" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <TextBlock Text="{Binding ModeText}" Style="{StaticResource Dim}" HorizontalAlignment="Right" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
