@@ -97,7 +97,7 @@ public partial class MainWindow : Window
         if (sender is not ListView { View: GridView grid } list || grid.Columns.Count < 2) return;
         var others = grid.Columns.Where((_, i) => i != 1).Sum(c => double.IsNaN(c.Width) ? c.ActualWidth : c.Width);
         var width = list.ActualWidth - others - 40;
-        if (width > 140) grid.Columns[1].Width = width;
+        if (list.ActualWidth > 0) grid.Columns[1].Width = Math.Max(140, width);
     }
 
     private void Window_DragOver(object sender, DragEventArgs e)
