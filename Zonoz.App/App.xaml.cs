@@ -9,6 +9,7 @@ public partial class App : Application
 {
     /// <summary>命令列選項（主要給自動化冒煙測試用）</summary>
     public static AppOptions Options { get; private set; } = new();
+    private Mutex? _singleInstance;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -24,6 +25,20 @@ public partial class App : Application
         }
         DispatcherUnhandledException += OnUnhandled;
         base.OnStartup(e);
+        if (Options.Theme == "dark") ThemeMode = ThemeMode.Dark;
+        else if (Options.Theme == "light") ThemeMode = ThemeMode.Light;
+
+        if (Options.SmokeDir == null)
+        {
+            // 同時開兩份會搶串流埠、互相覆蓋音箱佇列
+            _singleInstance = new Mutex(true, "ZonozLocalStream.SingleInstance", out var createdNew);
+            if (!createdNew)
+            {
+                MessageBox.Show("ZONOZ Local Stream 已經在執行中。", "ZONOZ Local Stream", MessageBoxButton.OK, MessageBoxImage.Information);
+                Shutdown();
+                return;
+            }
+        }
         new MainWindow().Show();
     }
 
@@ -57,6 +72,8 @@ public sealed class AppOptions
     public List<string> LibraryFolders { get; } = new();
     public List<string> Speakers { get; } = new();
     public string? SmokeDir { get; private set; }
+    /// <summary>dark / light：強制主題（預設跟隨系統）</summary>
+    public string? Theme { get; private set; }
 
     public static AppOptions Parse(string[] args)
     {
@@ -70,6 +87,7 @@ public sealed class AppOptions
                 case "--library": if (Next() is { } l) options.LibraryFolders.Add(l); break;
                 case "--speaker": if (Next() is { } s) options.Speakers.Add(s); break;
                 case "--smoke": options.SmokeDir = Next(); break;
+                case "--theme": options.Theme = Next(); break;
             }
         }
         return options;

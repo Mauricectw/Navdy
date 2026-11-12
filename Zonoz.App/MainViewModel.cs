@@ -122,7 +122,8 @@ public sealed class MainViewModel : Observable
     // ---------------- 曲庫 ----------------
 
     private string _query = "";
-    public string Query { get => _query; set { if (Set(ref _query, value)) ApplyFilter(); } }
+    public string Query { get => _query; set { if (Set(ref _query, value)) { Raise(nameof(QueryEmpty)); ApplyFilter(); } } }
+    public bool QueryEmpty => _query.Length == 0;
 
     private int _sortIndex;
     public int SortIndex

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="{Binding WindowTitle}" Width="1180" Height="780" MinWidth="900" MinHeight="560"
         WindowStartupLocation="CenterScreen" FontFamily="Segoe UI, Microsoft JhengHei UI" FontSize="14"
-        PreviewKeyDown="Window_PreviewKeyDown" Closing="Window_Closing">
+        PreviewKeyDown="Window_PreviewKeyDown" Closing="Window_Closing" AllowDrop="True" Drop="Window_Drop" DragOver="Window_DragOver">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <Style x:Key="Dim" TargetType="TextBlock">
@@ -56,8 +56,10 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Name="ManualIpBox" Grid.Column="0" KeyDown="ManualIpBox_KeyDown"
+                        <TextBox x:Name="ManualIpBox" Grid.Column="0" KeyDown="ManualIpBox_KeyDown" TextChanged="ManualIpBox_TextChanged"
                                  ToolTip="手動輸入音箱 IP，例如 192.168.1.20"/>
+                        <TextBlock x:Name="ManualIpHint" Grid.Column="0" Text="音箱 IP，例如 192.168.1.20" Opacity="0.45" IsHitTestVisible="False"
+                                   VerticalAlignment="Center" Margin="12,0,0,0"/>
                         <Button Grid.Column="1" Content="加入 IP" Margin="6,0,0,0" Click="AddManual_Click"/>
                     </Grid>
 
@@ -118,11 +120,15 @@
                             <CheckBox DockPanel.Dock="Right" Content="只看收藏" IsChecked="{Binding FavoritesOnly}" Margin="12,0,0,0" VerticalAlignment="Center"/>
                             <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding SortNames}" SelectedIndex="{Binding SortIndex}" Width="130" Margin="8,0,0,0"/>
                             <TextBlock DockPanel.Dock="Right" Text="{Binding LibraryStatus}" Style="{StaticResource Dim}" VerticalAlignment="Center" Margin="12,0,4,0"/>
-                            <TextBox x:Name="SearchBox" Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" ToolTip="搜尋歌名、演出者、專輯（Ctrl+F）"/>
+                            <Grid>
+                                <TextBox x:Name="SearchBox" Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" ToolTip="搜尋歌名、演出者、專輯（Ctrl+F）"/>
+                                <TextBlock Text="搜尋歌名、演出者、專輯" Opacity="0.45" IsHitTestVisible="False" VerticalAlignment="Center" Margin="12,0,0,0"
+                                           Visibility="{Binding QueryEmpty, Converter={StaticResource BoolToVis}}"/>
+                            </Grid>
                         </DockPanel>
 
                         <ListView x:Name="TrackList" Grid.Row="1" ItemsSource="{Binding VisibleTracks}" SelectionMode="Single"
-                                  MouseDoubleClick="TrackList_MouseDoubleClick" KeyDown="TrackList_KeyDown"
+                                  MouseDoubleClick="TrackList_MouseDoubleClick" KeyDown="TrackList_KeyDown" SizeChanged="List_SizeChanged"
                                   VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
                                   ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListView.ContextMenu>
@@ -148,7 +154,7 @@
                                             <DataTemplate><TextBlock Text="{Binding Title}" Style="{StaticResource CellText}"/></DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="演出者" Width="170">
+                                    <GridViewColumn Header="演出者" Width="160">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate><TextBlock Text="{Binding Artist}" Style="{StaticResource CellText}"/></DataTemplate>
                                         </GridViewColumn.CellTemplate>
@@ -158,12 +164,12 @@
                                             <DataTemplate><TextBlock Text="{Binding Album}" Style="{StaticResource CellText}"/></DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="格式" Width="100">
+                                    <GridViewColumn Header="格式" Width="104">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate><TextBlock Text="{Binding Badge}" Style="{StaticResource CellText}"/></DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="時長" Width="64">
+                                    <GridViewColumn Header="時長" Width="60">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate><TextBlock Text="{Binding Duration}" Style="{StaticResource CellText}"/></DataTemplate>
                                         </GridViewColumn.CellTemplate>
@@ -184,7 +190,7 @@
 
                 <TabItem Header="{Binding QueueHeader}">
                     <ListView x:Name="QueueList" ItemsSource="{Binding Queue}" Margin="4,10,4,4" SelectionMode="Single"
-                              MouseDoubleClick="QueueList_MouseDoubleClick" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                              MouseDoubleClick="QueueList_MouseDoubleClick" SizeChanged="List_SizeChanged" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListView.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="播放這一首" Click="QueuePlay_Click"/>
@@ -203,7 +209,7 @@
                                         <DataTemplate><TextBlock Text="{Binding Title}" Style="{StaticResource CellText}"/></DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="演出者" Width="260">
+                                <GridViewColumn Header="演出者" Width="200">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate><TextBlock Text="{Binding Artist}" Style="{StaticResource CellText}"/></DataTemplate>
                                     </GridViewColumn.CellTemplate>
@@ -265,9 +271,20 @@
                         <ListBox ItemsSource="{Binding Log}" FontFamily="Cascadia Mono, Consolas" FontSize="12"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                  VirtualizingPanel.IsVirtualizing="True">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <ContentPresenter Margin="10,2"/>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Line}" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Line}" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>

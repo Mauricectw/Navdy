@@ -45,6 +45,11 @@ public partial class MainWindow : Window
         if (e.Key == Key.Enter) AddManual_Click(sender, e);
     }
 
+    private void ManualIpBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (ManualIpHint != null) ManualIpHint.Visibility = ManualIpBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     private void DeviceCheck_Click(object sender, RoutedEventArgs e)
     {
         if ((sender as FrameworkElement)?.DataContext is DeviceRow row) _vm.Engine.ToggleSelection(row.Key);
@@ -84,6 +89,32 @@ public partial class MainWindow : Window
         if (SelectedTrack is not { } row) return;
         try { Process.Start("explorer.exe", $"/select,\"{row.Track.Path}\""); }
         catch (Exception ex) { LogBus.W($"無法開啟檔案總管：{ex.Message}"); }
+    }
+
+    /// <summary>讓「歌名」欄吃掉剩餘寬度（第 2 欄，索引 1）。</summary>
+    private void List_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is not ListView { View: GridView grid } list || grid.Columns.Count < 2) return;
+        var others = grid.Columns.Where((_, i) => i != 1).Sum(c => double.IsNaN(c.Width) ? c.ActualWidth : c.Width);
+        var width = list.ActualWidth - others - 40;
+        if (width > 140) grid.Columns[1].Width = width;
+    }
+
+    private void Window_DragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Link : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    /// <summary>把資料夾（或檔案）拖進視窗 = 加入曲庫資料夾。</summary>
+    private void Window_Drop(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetData(DataFormats.FileDrop) is not string[] paths) return;
+        foreach (var path in paths)
+        {
+            var folder = Directory.Exists(path) ? path : System.IO.Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder)) _vm.AddFolder(folder);
+        }
     }
 
     private void Rescan_Click(object sender, RoutedEventArgs e) => _ = _vm.ScanLibraryAsync();
@@ -325,9 +356,8 @@ public partial class MainWindow : Window
         {
             var bounds = new Rect(0, 0, root.ActualWidth, root.ActualHeight);
             // 視窗背景可能是半透明（系統主題材質），先鋪一層不透明底色
-            var dark = Background is SolidColorBrush { Color: var c } && c.A > 200 && c.R + c.G + c.B < 384;
+            var dark = Application.Current.ThemeMode == ThemeMode.Dark;
             context.DrawRectangle(dark ? new SolidColorBrush(Color.FromRgb(0x20, 0x20, 0x20)) : Brushes.White, null, bounds);
-            if (Background is SolidColorBrush solid) context.DrawRectangle(solid, null, bounds);
             context.DrawRectangle(new VisualBrush(root) { Stretch = Stretch.None }, null, bounds);
         }
         var bitmap = new RenderTargetBitmap(width, height, dpi.PixelsPerInchX, dpi.PixelsPerInchY, PixelFormats.Pbgra32);

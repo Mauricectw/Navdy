@@ -53,6 +53,16 @@ jobs:
           Get-ChildItem smoke | Format-Table Name, Length
           if (Test-Path smoke\smoke.json) { Get-Content smoke\smoke.json -Encoding utf8 }
           if (Test-Path smoke\crash.txt) { Get-Content smoke\crash.txt }
+          # 深色主題再跑一次，只為了確認文字在深色底上看得見
+          New-Item -ItemType Directory -Force smoke\dark | Out-Null
+          $fake2 = Start-Process python -ArgumentList 'Tests/fake_sonos.py','--fetch' -PassThru -WindowStyle Hidden
+          Start-Sleep -Seconds 2
+          $darkArgs = @('--smoke', "$PWD\smoke\dark", '--data', "$PWD\smoke\dark\data", '--library', "$PWD\Tests\media", '--speaker', '127.0.0.1', '--theme', 'dark')
+          $dark = Start-Process "$PWD\publish\ZonozLocalStream.exe" -ArgumentList $darkArgs -PassThru
+          if (-not $dark.WaitForExit(150000)) { $dark.Kill() }
+          try { Invoke-WebRequest http://127.0.0.1:1400/__quit -Method Post -TimeoutSec 3 | Out-Null } catch { }
+          Stop-Process -Id $fake2.Id -ErrorAction SilentlyContinue
+          Get-ChildItem smoke\dark -Filter *.png | ForEach-Object { Copy-Item $_.FullName ("smoke\dark-" + $_.Name) }
           $code = if ($finished) { $app.ExitCode } else { 99 }
           if ($code -ne 0) { Write-Output "::error title=smoke::app exited with $code"; exit 1 }
 
