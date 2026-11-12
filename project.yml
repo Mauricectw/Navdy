@@ -1,0 +1,41 @@
+# 用 XcodeGen 產生 Xcode 專案（https://github.com/yonaskolb/XcodeGen）：
+#   brew install xcodegen && xcodegen generate
+name: ZonozLocalStream
+options:
+  bundleIdPrefix: tw.zonoz
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+  developmentLanguage: zh-Hant
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.2.1"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  ZonozLocalStream:
+    type: application
+    platform: iOS
+    sources:
+      - path: ZonozLocalStream
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: tw.zonoz.localstream
+        PRODUCT_NAME: ZonozLocalStream
+        INFOPLIST_FILE: ZonozLocalStream/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_BITCODE: NO
+        SWIFT_STRICT_CONCURRENCY: minimal
+        CODE_SIGN_STYLE: Automatic
+schemes:
+  ZonozLocalStream:
+    build:
+      targets:
+        ZonozLocalStream: all
+    run:
+      config: Debug
+    archive:
+      config: Release

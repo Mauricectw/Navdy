@@ -1,0 +1,59 @@
+name: Build ZONOZ unsigned IPA
+
+on:
+  push:
+    branches: [zonoz-ios]
+  workflow_dispatch:
+
+jobs:
+  logic-tests:
+    # 協定層與播放引擎只用 Foundation，對著假音箱在 Linux 上跑
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: swift-actions/setup-swift@v2
+      - name: Offline engine tests
+        run: .github/scripts/run-and-annotate.sh tests.log logic-tests -- Tests/run_linux_tests.sh
+
+  ios:
+    runs-on: xcode-27
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Tools
+        run: |
+          xcodebuild -version
+          brew install xcodegen
+
+      - name: Generate Xcode project
+        run: .github/scripts/run-and-annotate.sh xcodegen.log xcodegen -- xcodegen generate
+
+      - name: Build (no code signing)
+        run: |
+          .github/scripts/run-and-annotate.sh build.log xcodebuild -- xcodebuild \
+            -project ZonozLocalStream.xcodeproj \
+            -scheme ZonozLocalStream \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+          test -d build/Build/Products/Release-iphoneos/ZonozLocalStream.app
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/ZonozLocalStream.app Payload/
+          zip -qry ZONOZ-LocalStream-unsigned.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZONOZ-LocalStream-unsigned-ipa
+          path: ZONOZ-LocalStream-unsigned.ipa
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zonoz-build-log
+          path: build.log
