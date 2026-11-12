@@ -100,7 +100,7 @@ static class Program
         var list = new List<Track>();
         for (var i = 0; i < count; i++)
         {
-            var path = Path.Combine(dir, $"{i:00} It's <A&B>.m4a");
+            var path = Path.Combine(dir, $"{i:00} It's (A&B).m4a");
             var bytes = new byte[FileSize];
             for (var b = 0; b < bytes.Length; b++) bytes[b] = (byte)((b + i) % 251);
             File.WriteAllBytes(path, bytes);
