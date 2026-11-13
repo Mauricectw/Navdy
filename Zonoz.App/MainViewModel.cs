@@ -50,6 +50,17 @@ public sealed class TrackRow : Observable
     public string Heart => _isFavorite ? "" : "";
     private bool _isCurrent;
     public bool IsCurrent { get => _isCurrent; set => Set(ref _isCurrent, value); }
+    private string _number = "";
+    /// <summary>在播放清單 / 最近播放裡的序號；其他來源為空</summary>
+    public string Number { get => _number; set => Set(ref _number, value); }
+    public string Subtitle
+    {
+        get
+        {
+            var parts = new[] { Track.Artist, Track.Album }.Where(x => x.Length > 0).ToList();
+            return parts.Count > 0 ? string.Join(" · ", parts) : Track.FileName;
+        }
+    }
 }
 
 public sealed class QueueRow : Observable
@@ -64,7 +75,7 @@ public sealed class QueueRow : Observable
     public bool IsCurrent { get => _isCurrent; set => Set(ref _isCurrent, value); }
 }
 
-public sealed class MainViewModel : Observable
+public sealed partial class MainViewModel : Observable
 {
     public AppSettings Settings { get; }
     public WinPlatform Platform { get; } = new();
@@ -80,6 +91,7 @@ public sealed class MainViewModel : Observable
 
     private List<TrackRow> _allRows = new();
     private Dictionary<string, TrackRow> _rowsById = new();
+    private Dictionary<string, TrackRow> _rowsByPath = new(StringComparer.OrdinalIgnoreCase);
     private IReadOnlyList<TrackRow> _visibleTracks = Array.Empty<TrackRow>();
     public IReadOnlyList<TrackRow> VisibleTracks { get => _visibleTracks; private set => Set(ref _visibleTracks, value); }
 
@@ -101,6 +113,8 @@ public sealed class MainViewModel : Observable
         _sortIndex = Math.Max(0, Array.IndexOf(Enum.GetNames<LibrarySort>(), Settings.Sort));
 
         _library = new MusicLibrary(_tags, System.IO.Path.Combine(dataDir, "library-cache.json"));
+        Playlists = PlaylistStore.Load(System.IO.Path.Combine(dataDir, "playlists.json"));
+        InitSources();
         Platform.KeepAwake = Settings.KeepAwake;
         Engine = new CastEngine(Platform, Settings);
         Engine.PropertyChanged += OnEngineChanged;
@@ -122,7 +136,7 @@ public sealed class MainViewModel : Observable
     // ---------------- 曲庫 ----------------
 
     private string _query = "";
-    public string Query { get => _query; set { if (Set(ref _query, value)) { Raise(nameof(QueryEmpty)); ApplyFilter(); } } }
+    public string Query { get => _query; set { if (Set(ref _query, value)) { Raise(nameof(QueryEmpty)); ApplyFilter(); UpdateSuggestions(); } } }
     public bool QueryEmpty => _query.Length == 0;
 
     private int _sortIndex;
@@ -139,9 +153,6 @@ public sealed class MainViewModel : Observable
             ApplyFilter();
         }
     }
-
-    private bool _favoritesOnly;
-    public bool FavoritesOnly { get => _favoritesOnly; set { if (Set(ref _favoritesOnly, value)) ApplyFilter(); } }
 
     private string _libraryStatus = "";
     public string LibraryStatus { get => _libraryStatus; private set => Set(ref _libraryStatus, value); }
@@ -163,6 +174,8 @@ public sealed class MainViewModel : Observable
             var favorites = Settings.Favorites.ToHashSet();
             _allRows = tracks.Select(t => new TrackRow { Track = t, IsFavorite = favorites.Contains(t.Id) }).ToList();
             _rowsById = _allRows.ToDictionary(r => r.Track.Id);
+            _rowsByPath = new Dictionary<string, TrackRow>(StringComparer.OrdinalIgnoreCase);
+            foreach (var row in _allRows) _rowsByPath[row.Track.Path] = row;
             MediaRegistry.Shared.ReplaceAll(tracks);
             Engine.LibraryChanged(tracks);
             LogBus.I($"曲庫掃描完成：{tracks.Count} 首");
@@ -181,29 +194,60 @@ public sealed class MainViewModel : Observable
         }
     }
 
+    private List<TrackRow> _numbered = new();
+
+    private IEnumerable<TrackRow> RowsOf(SourceRow source) => source.Kind switch
+    {
+        SourceKind.Favorites => _allRows.Where(r => r.IsFavorite),
+        SourceKind.Recent => Settings.RecentPaths.Select(RowForPath).Where(r => r != null).Select(r => r!),
+        SourceKind.Playlist when source.Playlist != null => source.Playlist.Paths.Select(RowForPath).Where(r => r != null).Select(r => r!),
+        _ => _allRows,
+    };
+
+    private TrackRow? RowForPath(string path) => _rowsByPath.TryGetValue(path, out var row) ? row : null;
+
     private void ApplyFilter()
     {
-        IEnumerable<TrackRow> rows = _allRows;
-        if (_favoritesOnly) rows = rows.Where(r => r.IsFavorite);
+        var source = CurrentSource;
+        var all = RowsOf(source).ToList();
+        IEnumerable<TrackRow> rows = all;
         var q = _query.Trim();
         if (q.Length > 0)
         {
             const StringComparison c = StringComparison.CurrentCultureIgnoreCase;
             rows = rows.Where(r => r.Title.Contains(q, c) || r.Artist.Contains(q, c) || r.Album.Contains(q, c) || r.Track.FileName.Contains(q, c));
         }
-        VisibleTracks = rows.ToList();
+        var visible = rows.ToList();
+
+        // 序號只在「有自己順序」的來源顯示；列物件是共用的，所以先把上一輪標的清掉
+        foreach (var row in _numbered) row.Number = "";
+        _numbered = new List<TrackRow>();
+        if (source.Kind is SourceKind.Playlist or SourceKind.Recent)
+        {
+            for (var n = 0; n < all.Count; n++) all[n].Number = (n + 1).ToString();
+            _numbered = all;
+        }
+
+        VisibleTracks = visible;
         if (!_libraryScanning)
-            LibraryStatus = VisibleTracks.Count == _allRows.Count ? $"{_allRows.Count} 首" : $"{VisibleTracks.Count} / {_allRows.Count} 首";
+            LibraryStatus = visible.Count == all.Count ? "" : $"符合 {visible.Count} / {all.Count} 首";
+        RefreshSourceHeader(all);
+        RefreshSourceCounts();
     }
 
-    public void PlayRow(TrackRow row) => Engine.Play(row.Track, VisibleTracks.Select(r => r.Track).ToList());
+    public void PlayRow(TrackRow row)
+    {
+        NoteRecent(row.Track);
+        Engine.Play(row.Track, VisibleTracks.Select(r => r.Track).ToList());
+    }
 
     public void ToggleFavorite(TrackRow row)
     {
         row.IsFavorite = !row.IsFavorite;
         Settings.Favorites = _allRows.Where(r => r.IsFavorite).Select(r => r.Track.Id).ToList();
         Settings.Save();
-        if (_favoritesOnly) ApplyFilter();
+        if (CurrentSource.Kind == SourceKind.Favorites) ApplyFilter();
+        else RefreshSourceCounts();
     }
 
     public void AddFolder(string folder)
@@ -221,6 +265,21 @@ public sealed class MainViewModel : Observable
         Settings.LibraryFolders = Folders.ToList();
         Settings.Save();
         _ = ScanLibraryAsync();
+    }
+
+    /// <summary>播放工作階段開始 / 結束（視窗用它來註冊 / 釋放全域媒體鍵）</summary>
+    public event Action<bool>? SessionChanged;
+
+    public bool GlobalMediaKeys
+    {
+        get => Settings.GlobalMediaKeys;
+        set
+        {
+            Settings.GlobalMediaKeys = value;
+            Settings.Save();
+            Raise();
+            SessionChanged?.Invoke(Engine.HasSession);
+        }
     }
 
     public bool KeepAwake
@@ -253,6 +312,9 @@ public sealed class MainViewModel : Observable
             case nameof(CastEngine.CurrentTrack):
                 MarkCurrent();
                 RefreshNowPlaying();
+                // 音箱自己切到下一首（或按了機身按鍵）也算進「最近播放」
+                if (Engine.IsPlaying && Engine.CurrentTrack is { } playing) NoteRecent(playing);
+                SleepTrackChanged();
                 break;
             case nameof(CastEngine.PositionSec):
             case nameof(CastEngine.DurationSec):
@@ -291,6 +353,7 @@ public sealed class MainViewModel : Observable
             Raise(nameof(RepeatGlyph));
             Raise(nameof(RepeatOn));
             Raise(nameof(WindowTitle));
+            if (e.PropertyName == nameof(CastEngine.HasSession)) SessionChanged?.Invoke(Engine.HasSession);
         }
     }
 
@@ -343,7 +406,7 @@ public sealed class MainViewModel : Observable
         Raise(nameof(QueueHeader));
     }
 
-    public string QueueHeader => $"播放清單（{Engine.Queue.Count}）";
+    public string QueueHeader => $"待播清單（{Engine.Queue.Count}）";
 
     private string? _markedId;
 

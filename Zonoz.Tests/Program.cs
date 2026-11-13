@@ -268,6 +268,44 @@ static class Program
         T.Check(again.Select(t => t.Id).SequenceEqual(scanned.Select(t => t.Id)), "第二次掃描（走快取）結果一致");
         T.Check(MusicLibrary.Filter(scanned, "B SONG").Count == 1, "搜尋不分大小寫");
         server.Stop();
+
+        Console.WriteLine("== PlaylistStore / SearchSuggest");
+        var storePath = Path.Combine(dir, "playlists.json");
+        var store = PlaylistStore.Load(storePath);
+        string P(string n) => Path.Combine(dir, n);
+        var rock = store.Create("搖滾", new[] { P("a.mp3"), P("b.mp3"), P("c.mp3"), P("d.mp3"), P("e.mp3") });
+        T.Check(store.Create("搖滾").Name == "搖滾 2" && store.Create().Name == "新播放清單" && store.Create().Name == "新播放清單 2", "重複名稱自動編號");
+        T.Check(store.Add(rock, new[] { P("A.MP3"), P("f.mp3") }) == 1 && rock.Paths.Count == 6, "加入時略過已存在的（不分大小寫）");
+        T.Check(store.Move(rock, new[] { P("d.mp3"), P("b.mp3") }, P("a.mp3"))
+                && rock.Paths.Select(Path.GetFileName).SequenceEqual(new[] { "b.mp3", "d.mp3", "a.mp3", "c.mp3", "e.mp3", "f.mp3" }), "多選搬到指定曲目之前，保持相對順序");
+        T.Check(store.Move(rock, new[] { P("b.mp3") }, null) && Path.GetFileName(rock.Paths[^1]) == "b.mp3", "搬到最後");
+        T.Check(!store.Move(rock, new[] { P("d.mp3") }, P("d.mp3")) && !store.Move(rock, new[] { P("d.mp3") }, P("a.mp3")), "拖到自己 / 原位 → 不變");
+        T.Check(store.Remove(rock, new[] { P("C.mp3"), P("zzz.mp3") }) == 1 && rock.Paths.Count == 5, "移除");
+        T.Check(store.Rename(rock, "  搖滾 2 ") && rock.Name == "搖滾 2 2" && !store.Rename(rock, "  "), "改名：去空白、避開重複、不接受空名");
+        var copy = store.Duplicate(rock);
+        T.Check(copy.Paths.SequenceEqual(rock.Paths) && copy.Id != rock.Id, "複製清單");
+        var reloaded2 = PlaylistStore.Load(storePath);
+        T.Check(reloaded2.Playlists.Count == store.Playlists.Count && reloaded2.Playlists[0].Paths.SequenceEqual(rock.Paths) && reloaded2.Playlists[0].Name == rock.Name, "存檔後重新載入一致");
+        var m3u = Path.Combine(dir, "export 測試.m3u8");
+        var meta = new Track { Path = rock.Paths[0], Title = "晴天", Artist = "周", DurationMs = 269_000 };
+        PlaylistStore.ExportM3u(rock, m3u, p => p == rock.Paths[0] ? meta : null);
+        var text = File.ReadAllText(m3u);
+        T.Check(text.StartsWith("#EXTM3U") && text.Contains("#EXTINF:269,周 - 晴天") && text.Contains("#PLAYLIST:搖滾 2 2"), "匯出 M3U8");
+        var imported = store.Import(m3u);
+        T.Check(imported.Paths.SequenceEqual(rock.Paths) && imported.Name == "搖滾 2 2 2", "匯入 M3U8（名稱取自 #PLAYLIST）");
+        File.WriteAllLines(Path.Combine(dir, "rel.m3u"), new[] { "#EXTM3U", "sub/x.flac", "http://example.com/a.mp3", "", P("y.mp3") });
+        var rel = PlaylistStore.ReadM3u(Path.Combine(dir, "rel.m3u"));
+        T.Check(rel.Name == "rel" && rel.Paths.Count == 2 && rel.Paths[0] == Path.GetFullPath(Path.Combine(dir, "sub", "x.flac")), "相對路徑以清單檔位置為準、網址略過");
+        store.Delete(rock);
+        T.Check(!PlaylistStore.Load(storePath).Playlists.Any(p => p.Id == rock.Id), "刪除");
+
+        Track S(string title, string artist = "", string album = "") => new() { Id = title, Path = title + ".mp3", Title = title, Artist = artist, Album = album };
+        var songs = new[] { S("晴天", "周杰倫", "葉惠美"), S("陰天", "莫文蔚"), S("Sunny Day", "晴子"), S("Love Story", "Taylor Swift", "Fearless"), S("Story of My Life", "One Direction"), S("天黑黑", "孫燕姿") };
+        T.Check(SearchSuggest.Find(songs, "晴").Select(t => t.Title).SequenceEqual(new[] { "晴天", "Sunny Day" }), "打一個字：歌名開頭優先，其次演出者");
+        T.Check(SearchSuggest.Find(songs, "story").Select(t => t.Title).SequenceEqual(new[] { "Story of My Life", "Love Story" }), "不分大小寫；開頭 > 詞首");
+        T.Check(SearchSuggest.Find(songs, "天").Count == 3 && SearchSuggest.Find(songs, "天")[0].Title == "天黑黑" && SearchSuggest.Find(songs, "天", 2).Count == 2, "包含比對與數量上限");
+        T.Check(SearchSuggest.Find(songs, "love taylor").Select(t => t.Title).SequenceEqual(new[] { "Love Story" }) && SearchSuggest.Find(songs, "love 周").Count == 0, "多個關鍵字要全部命中");
+        T.Check(SearchSuggest.Find(songs, "fearless").Count == 1 && SearchSuggest.Find(songs, "  ").Count == 0, "專輯也搜；空白不回結果");
         Directory.Delete(dir, true);
     }
 
